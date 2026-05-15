@@ -1,0 +1,362 @@
+@import './styles/theme.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    @apply antialiased;
+  }
+
+  body {
+    @apply bg-void text-text-primary font-sans min-h-screen;
+    background-image: radial-gradient(ellipse 80% 50% at 50% -20%, rgba(255, 255, 255, 0.04), transparent);
+  }
+
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 999px;
+  }
+  ::selection {
+    background: rgba(255, 255, 255, 0.2);
+    color: #fff;
+  }
+}
+
+@keyframes slide-up {
+  from { transform: translateY(8px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes scale-in {
+  from { transform: scale(0.96) translateY(8px); opacity: 0; }
+  to { transform: scale(1) translateY(0); opacity: 1; }
+}
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.skeleton {
+  background: linear-gradient(90deg, rgba(255,255,255,0.03) 25%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.03) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 12px;
+}
+
+.animate-slide-up { animation: slide-up 0.3s ease forwards; }
+.animate-fade-in { animation: fade-in 0.3s ease forwards; }
+.animate-scale-in { animation: scale-in 0.28s cubic-bezier(0.22, 1, 0.36, 1) forwards; }
+
+@layer components {
+  .glass {
+    @apply bg-white/[0.04] backdrop-blur-glass border border-glass-border shadow-glass;
+  }
+
+  .glass-strong {
+    @apply bg-white/[0.08] backdrop-blur-xl border border-white/15 shadow-glass-lg;
+  }
+
+  .glass-panel {
+    @apply rounded-2xl bg-white/[0.04] backdrop-blur-glass border border-glass-border shadow-glass overflow-hidden;
+  }
+
+  .dashboard-panel-glow {
+    position: relative;
+    overflow: hidden;
+    border-color: rgba(52, 211, 153, 0.14);
+    box-shadow:
+      0 8px 32px rgba(0, 0, 0, 0.45),
+      0 0 48px rgba(16, 185, 129, 0.06),
+      inset 0 1px 0 rgba(167, 243, 208, 0.1);
+  }
+
+  .dashboard-panel-glow::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: radial-gradient(ellipse 90% 55% at 50% -10%, rgba(52, 211, 153, 0.1), transparent 58%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .dashboard-panel-glow > * {
+    position: relative;
+    z-index: 1;
+  }
+
+  .metric-glow-brand {
+    border-color: rgba(103, 232, 249, 0.18);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), 0 0 32px rgba(34, 211, 238, 0.08), inset 0 1px 0 rgba(165, 243, 252, 0.1);
+  }
+
+  .metric-glow-brand::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: radial-gradient(ellipse 100% 70% at 50% -25%, rgba(34, 211, 238, 0.14), transparent 55%);
+    pointer-events: none;
+  }
+
+  .metric-glow-emerald {
+    border-color: rgba(52, 211, 153, 0.22);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), 0 0 40px rgba(16, 185, 129, 0.12), inset 0 1px 0 rgba(167, 243, 208, 0.12);
+  }
+
+  .metric-glow-emerald::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: radial-gradient(ellipse 100% 70% at 50% -25%, rgba(52, 211, 153, 0.2), transparent 55%);
+    pointer-events: none;
+  }
+
+  .metric-glow-amber {
+    border-color: rgba(251, 191, 36, 0.18);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), 0 0 32px rgba(251, 191, 36, 0.08), inset 0 1px 0 rgba(253, 230, 138, 0.08);
+  }
+
+  .metric-glow-amber::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: radial-gradient(ellipse 100% 70% at 50% -25%, rgba(251, 191, 36, 0.14), transparent 55%);
+    pointer-events: none;
+  }
+
+  .metric-glow-violet {
+    border-color: rgba(167, 139, 250, 0.2);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), 0 0 36px rgba(139, 92, 246, 0.1), inset 0 1px 0 rgba(221, 214, 254, 0.1);
+  }
+
+  .metric-glow-violet::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: radial-gradient(ellipse 100% 70% at 50% -25%, rgba(167, 139, 250, 0.16), transparent 55%);
+    pointer-events: none;
+  }
+
+  .metric-glow-red {
+    border-color: rgba(248, 113, 113, 0.22);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), 0 0 40px rgba(239, 68, 68, 0.12), inset 0 1px 0 rgba(254, 202, 202, 0.1);
+  }
+
+  .metric-glow-red::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: radial-gradient(ellipse 100% 70% at 50% -25%, rgba(248, 113, 113, 0.18), transparent 55%);
+    pointer-events: none;
+  }
+
+  .dashboard-panel-glow-teal {
+    position: relative;
+    overflow: hidden;
+    border-color: rgba(45, 212, 191, 0.16);
+    box-shadow:
+      0 8px 32px rgba(0, 0, 0, 0.45),
+      0 0 48px rgba(20, 184, 166, 0.08),
+      inset 0 1px 0 rgba(153, 246, 228, 0.1);
+  }
+
+  .dashboard-panel-glow-teal::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: radial-gradient(ellipse 90% 55% at 50% -10%, rgba(45, 212, 191, 0.12), transparent 58%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .dashboard-panel-glow-teal > * {
+    position: relative;
+    z-index: 1;
+  }
+
+  .metric-card-accent > * {
+    position: relative;
+    z-index: 1;
+  }
+
+  .glass-modal-backdrop {
+    @apply bg-black/75 backdrop-blur-md;
+    animation: fade-in 0.25s ease forwards;
+  }
+
+  .glass-modal-card {
+    @apply rounded-3xl border border-white/15 shadow-glass-lg backdrop-blur-xl;
+    background:
+      linear-gradient(
+        155deg,
+        rgba(255, 255, 255, 0.14) 0%,
+        rgba(255, 255, 255, 0.04) 28%,
+        rgba(140, 140, 255, 0.07) 52%,
+        rgba(255, 255, 255, 0.03) 78%,
+        rgba(255, 255, 255, 0.09) 100%
+      );
+    box-shadow:
+      0 24px 80px rgba(0, 0, 0, 0.65),
+      inset 0 1px 0 rgba(255, 255, 255, 0.12),
+      inset 0 -1px 0 rgba(255, 255, 255, 0.04);
+  }
+
+  .glass-modal-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: radial-gradient(ellipse 90% 55% at 50% -15%, rgba(255, 255, 255, 0.18), transparent 58%);
+    pointer-events: none;
+  }
+
+  .glass-modal-card > * {
+    position: relative;
+    z-index: 1;
+  }
+
+  .glass-inset {
+    @apply rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-md;
+  }
+
+  .enterprise-card,
+  .card {
+    @apply rounded-2xl bg-white/[0.04] backdrop-blur-glass border border-glass-border shadow-glass p-5
+      transition-all duration-200;
+  }
+
+  .enterprise-panel,
+  .card-elevated {
+    @apply rounded-2xl bg-white/[0.04] backdrop-blur-glass border border-glass-border shadow-glass overflow-hidden;
+  }
+
+  .stat-card {
+    @apply rounded-2xl bg-white/[0.04] backdrop-blur-glass border border-glass-border p-4;
+  }
+
+  .nav-item {
+    @apply flex items-center gap-3 px-4 py-3 rounded-full text-[15px] font-medium text-text-secondary
+      transition-all duration-150;
+  }
+  .nav-item:hover {
+    @apply bg-white/[0.08] text-text-primary;
+  }
+  .nav-item-active,
+  .sidebar-item.active {
+    @apply bg-white text-void font-semibold;
+  }
+  .sidebar-item {
+    @apply nav-item;
+  }
+
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 rounded-full bg-white px-5 py-2.5
+      text-sm font-bold text-void transition-all hover:bg-neutral-200 active:scale-[0.98];
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center justify-center gap-2 rounded-full border border-glass-border
+      bg-white/[0.06] backdrop-blur-md px-5 py-2.5 text-sm font-semibold text-text-primary
+      hover:bg-white/[0.1] transition-all;
+  }
+
+  .btn-ghost {
+    @apply inline-flex items-center justify-center gap-2 rounded-full px-4 py-2 text-sm font-medium
+      text-text-secondary hover:bg-white/[0.08] hover:text-text-primary transition-colors;
+  }
+
+  .input-field {
+    @apply w-full rounded-xl border border-glass-border bg-white/[0.04] backdrop-blur-md px-4 py-3
+      text-[15px] text-text-primary placeholder:text-text-muted transition-all
+      focus:border-white/30 focus:bg-white/[0.06] focus:outline-none focus:ring-1 focus:ring-white/20;
+  }
+
+  .badge-cyan, .badge-brand {
+    @apply inline-flex items-center rounded-full border border-glass-border bg-white/[0.08]
+      px-2.5 py-0.5 text-xs font-medium text-text-primary;
+  }
+  .badge-green {
+    @apply inline-flex items-center rounded-full border border-white/20 bg-white/[0.12]
+      px-2.5 py-0.5 text-xs font-medium text-text-primary;
+  }
+  .badge-red {
+    @apply inline-flex items-center rounded-full border border-white/25 bg-white/[0.15]
+      px-2.5 py-0.5 text-xs font-medium text-void bg-white;
+  }
+  .badge-amber {
+    @apply inline-flex items-center rounded-full border border-glass-border bg-white/[0.06]
+      px-2.5 py-0.5 text-xs font-medium text-text-secondary;
+  }
+  .badge-violet {
+    @apply inline-flex items-center rounded-full border border-glass-border bg-white/[0.08]
+      px-2.5 py-0.5 text-xs font-medium text-text-secondary;
+  }
+
+  .pill-tab {
+    @apply px-4 py-2 rounded-full text-sm font-semibold transition-all;
+  }
+  .pill-tab-active {
+    @apply bg-white text-void;
+  }
+  .pill-tab-inactive {
+    @apply text-text-secondary hover:bg-white/[0.08] hover:text-text-primary;
+  }
+
+  .billboard-glow-outbreak {
+    box-shadow:
+      0 0 0 1px rgba(239, 68, 68, 0.25),
+      0 8px 40px rgba(239, 68, 68, 0.15);
+  }
+
+  .billboard-glow-emergency {
+    box-shadow:
+      0 0 0 1px rgba(249, 115, 22, 0.25),
+      0 8px 36px rgba(249, 115, 22, 0.12);
+  }
+
+  .billboard-glow-health {
+    box-shadow:
+      0 0 0 1px rgba(16, 185, 129, 0.2),
+      0 8px 36px rgba(16, 185, 129, 0.1);
+  }
+
+  .billboard-glow-event {
+    box-shadow: 0 8px 32px rgba(139, 92, 246, 0.12);
+  }
+
+  .billboard-glow-advisory {
+    box-shadow: 0 8px 28px rgba(245, 158, 11, 0.08);
+  }
+
+  @keyframes pulse-slow {
+    0%,
+    100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.92;
+    }
+  }
+
+  .animate-pulse-slow {
+    animation: pulse-slow 3s ease-in-out infinite;
+  }
+}

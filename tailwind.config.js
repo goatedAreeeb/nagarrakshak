@@ -1,0 +1,72 @@
+/** @type {import('tailwindcss').Config} */
+export default {
+  content: ['./index.html', './src/**/*.{js,jsx}'],
+  theme: {
+    extend: {
+      colors: {
+        void: '#000000',
+        ink: '#0a0a0a',
+        glass: {
+          DEFAULT: 'rgba(255, 255, 255, 0.06)',
+          light: 'rgba(255, 255, 255, 0.09)',
+          strong: 'rgba(255, 255, 255, 0.12)',
+          border: 'rgba(255, 255, 255, 0.12)',
+          hover: 'rgba(255, 255, 255, 0.16)',
+        },
+        'surface-0': '#000000',
+        'surface-1': '#0a0a0a',
+        'surface-2': 'rgba(255,255,255,0.04)',
+        'surface-3': 'rgba(255,255,255,0.08)',
+        'bg-base': '#000000',
+        'bg-surface': 'rgba(255,255,255,0.05)',
+        'bg-elevated': 'rgba(255,255,255,0.08)',
+        'bg-hover': 'rgba(255,255,255,0.1)',
+        brand: {
+          400: '#ffffff',
+          500: '#ffffff',
+          600: '#e5e5e5',
+        },
+        success: { 400: '#a3a3a3', 500: '#d4d4d4' },
+        warning: { 400: '#a8a8a8', 500: '#737373' },
+        danger: { 400: '#f5f5f5', 500: '#ffffff' },
+        'accent-cyan': '#67e8f9',
+        'accent-violet': '#c4b5fd',
+        'accent-emerald': '#6ee7b7',
+        'accent-amber': '#fcd34d',
+        'accent-red': '#fafafa',
+        'text-primary': '#f5f5f5',
+        'text-secondary': '#a3a3a3',
+        'text-muted': '#737373',
+        'text-hint': '#525252',
+        'border-subtle': 'rgba(255,255,255,0.08)',
+        'border-default': 'rgba(255,255,255,0.12)',
+        'border-strong': 'rgba(255,255,255,0.2)',
+        'border-glow': 'rgba(255,255,255,0.25)',
+      },
+      fontFamily: {
+        sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'sans-serif'],
+      },
+      backdropBlur: {
+        glass: '24px',
+        xl: '40px',
+      },
+      boxShadow: {
+        glass: '0 8px 32px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255,255,255,0.06)',
+        'glass-lg': '0 16px 48px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255,255,255,0.08)',
+        'glow-brand': '0 0 0 1px rgba(255,255,255,0.1)',
+        'glow-emerald': '0 8px 32px rgba(0,0,0,0.4), 0 0 36px rgba(16,185,129,0.12)',
+        'glow-cyan': '0 8px 32px rgba(0,0,0,0.4), 0 0 36px rgba(34,211,238,0.1)',
+        'glow-amber': '0 8px 32px rgba(0,0,0,0.4), 0 0 36px rgba(251,191,36,0.1)',
+        'glow-violet': '0 8px 32px rgba(0,0,0,0.4), 0 0 36px rgba(167,139,250,0.1)',
+        card: '0 8px 32px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255,255,255,0.05)',
+        'card-hover': '0 12px 40px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255,255,255,0.1)',
+        elevated: '0 24px 64px rgba(0, 0, 0, 0.6)',
+      },
+      backgroundImage: {
+        'mesh-gradient':
+          'radial-gradient(ellipse 60% 40% at 50% -10%, rgba(255,255,255,0.06), transparent), radial-gradient(ellipse 40% 30% at 100% 50%, rgba(255,255,255,0.03), transparent)',
+      },
+    },
+  },
+  plugins: [],
+};
