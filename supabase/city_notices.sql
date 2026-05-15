@@ -34,13 +34,15 @@ DROP POLICY IF EXISTS "City notices readable" ON city_notices;
 CREATE POLICY "City notices readable" ON city_notices FOR SELECT USING (true);
 
 DROP POLICY IF EXISTS "City notices insert staff" ON city_notices;
-CREATE POLICY "City notices insert staff" ON city_notices FOR INSERT WITH CHECK (
-  EXISTS (SELECT 1 FROM users u WHERE u.id = auth.uid() AND u.role IN ('city', 'zonal'))
+DROP POLICY IF EXISTS "City notices insert city head" ON city_notices;
+CREATE POLICY "City notices insert city head" ON city_notices FOR INSERT WITH CHECK (
+  EXISTS (SELECT 1 FROM users u WHERE u.id = auth.uid() AND u.role = 'city')
 );
 
 DROP POLICY IF EXISTS "City notices update staff" ON city_notices;
-CREATE POLICY "City notices update staff" ON city_notices FOR UPDATE USING (
-  EXISTS (SELECT 1 FROM users u WHERE u.id = auth.uid() AND u.role IN ('city', 'zonal'))
+DROP POLICY IF EXISTS "City notices update city head" ON city_notices;
+CREATE POLICY "City notices update city head" ON city_notices FOR UPDATE USING (
+  EXISTS (SELECT 1 FROM users u WHERE u.id = auth.uid() AND u.role = 'city')
 );
 
 DROP POLICY IF EXISTS "City notices delete city" ON city_notices;

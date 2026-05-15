@@ -78,7 +78,7 @@ export function roleLabel(role) {
     officer: 'Department Officer',
     supervisor: 'Zone Supervisor',
     zonal: 'Zonal Commissioner',
-    city: 'City Administrator',
+    city: 'City Head',
   };
   return map[role] || role;
 }

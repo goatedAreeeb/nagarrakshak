@@ -1,4 +1,5 @@
 @import './styles/theme.css';
+@import './styles/landing.css';
 
 @tailwind base;
 @tailwind components;
@@ -12,6 +13,12 @@
   body {
     @apply bg-void text-text-primary font-sans min-h-screen;
     background-image: radial-gradient(ellipse 80% 50% at 50% -20%, rgba(255, 255, 255, 0.04), transparent);
+  }
+
+  /* Landing route: don't let dashboard body styles bleed through */
+  body:has(.landing-shell) {
+    background: #050505 !important;
+    background-image: none !important;
   }
 
   ::-webkit-scrollbar {
@@ -58,6 +65,26 @@
 .animate-slide-up { animation: slide-up 0.3s ease forwards; }
 .animate-fade-in { animation: fade-in 0.3s ease forwards; }
 .animate-scale-in { animation: scale-in 0.28s cubic-bezier(0.22, 1, 0.36, 1) forwards; }
+
+@keyframes map-tooltip-in {
+  from {
+    opacity: 0;
+    transform: scale(0.92) translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.animate-map-tooltip-in {
+  animation: map-tooltip-in 0.22s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.map-tooltip-3d {
+  transform-style: preserve-3d;
+  perspective: 1200px;
+}
 
 @layer components {
   .glass {

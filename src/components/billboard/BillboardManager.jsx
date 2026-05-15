@@ -18,13 +18,23 @@ const DEFAULT_FORM = {
 };
 
 export default function BillboardManager() {
-  const { user, profile } = useAuth();
+  const { user, profile, role } = useAuth();
   const { notices, loading, refresh } = useCityNotices();
   const [form, setForm] = useState(DEFAULT_FORM);
   const [showForm, setShowForm] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
+
+  if (role !== 'city') {
+    return (
+      <section className="glass-panel p-6 text-center">
+        <p className="text-sm text-text-secondary">
+          Bulletin publishing is restricted to the City Head account.
+        </p>
+      </section>
+    );
+  }
 
   const publish = async (e) => {
     e.preventDefault();
@@ -88,7 +98,7 @@ export default function BillboardManager() {
           <Megaphone className="h-5 w-5 text-cyan-300" />
           <div>
             <h2 className="text-lg font-semibold text-text-primary">Bulletin publisher</h2>
-            <p className="text-xs text-text-muted">Outbreaks, LPT drives, emergencies — all roles see this</p>
+            <p className="text-xs text-text-muted">City Head only — published notices are visible to all users</p>
           </div>
         </div>
         <button type="button" onClick={() => setShowForm((v) => !v)} className="btn-primary text-sm">

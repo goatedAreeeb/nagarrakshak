@@ -4,6 +4,19 @@ export default {
   theme: {
     extend: {
       colors: {
+        /* Landing page — friend's design tokens */
+        background: '#050505',
+        surface: '#0B0B0D',
+        border: '#121417',
+        lp: {
+          background: '#050505',
+          surface: '#0B0B0D',
+          border: '#121417',
+          cyan: '#00E5FF',
+          amber: '#FFB300',
+          red: '#FF3D00',
+          green: '#00E676',
+        },
         void: '#000000',
         ink: '#0a0a0a',
         glass: {
@@ -34,6 +47,7 @@ export default {
         'accent-emerald': '#6ee7b7',
         'accent-amber': '#fcd34d',
         'accent-red': '#fafafa',
+        'accent-green': '#00E676',
         'text-primary': '#f5f5f5',
         'text-secondary': '#a3a3a3',
         'text-muted': '#737373',
@@ -61,6 +75,10 @@ export default {
         card: '0 8px 32px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255,255,255,0.05)',
         'card-hover': '0 12px 40px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255,255,255,0.1)',
         elevated: '0 24px 64px rgba(0, 0, 0, 0.6)',
+        'glow-cyan': '0 0 20px -5px rgba(0, 229, 255, 0.4)',
+        'glow-red': '0 0 20px -5px rgba(255, 61, 0, 0.4)',
+        'glow-amber': '0 0 20px -5px rgba(255, 179, 0, 0.4)',
+        'glow-green': '0 0 20px -5px rgba(0, 230, 118, 0.4)',
       },
       backgroundImage: {
         'mesh-gradient':

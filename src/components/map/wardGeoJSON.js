@@ -1,6 +1,5 @@
 import { HYDERABAD_WARDS } from '../../data/hyderabadWards';
-
-const HEX_RADIUS = 0.0115;
+import { HEX_RADIUS } from '../../lib/hyderabadHexGrid';
 
 export function createHexPolygon(lat, lng, radiusDeg = HEX_RADIUS, sides = 6) {
   const coords = [];
@@ -27,6 +26,7 @@ function wardRowToProps(w) {
     resolved_issues: w.resolved_issues ?? 0,
     health_score: w.health_score ?? 75,
     dominant_category: w.dominant_category ?? 'Roads',
+    is_named: w.is_named ?? false,
   };
 }
 
@@ -47,29 +47,9 @@ export function buildWardFeatures(wardData = HYDERABAD_WARDS) {
   };
 }
 
-/** Merge DB wards with full Hyderabad coverage (extra areas stay client-side). */
-export function buildWardFeaturesFromRows(wardRows) {
-  if (!wardRows?.length) return buildWardFeatures(HYDERABAD_WARDS);
-
-  const dbNames = new Set(wardRows.map((w) => w.name?.toLowerCase()));
-  const fromDb = wardRows.map((w) =>
-    wardRowToProps({
-      ward_id: w.id,
-      ward_name: w.name,
-      lat: w.lat,
-      lng: w.lng,
-      population: w.population,
-      zone: w.zone,
-      open_issues: w.open_issues,
-      resolved_issues: w.resolved_issues,
-      health_score: w.health_score,
-      dominant_category: w.dominant_category,
-    })
-  );
-  const extra = HYDERABAD_WARDS.filter((w) => !dbNames.has(w.ward_name.toLowerCase())).map(
-    wardRowToProps
-  );
-  return buildWardFeatures([...fromDb, ...extra]);
+/** Full tessellated grid; DB rows merged later via mergeWardLiveData. */
+export function buildWardFeaturesFromRows() {
+  return buildWardFeatures(HYDERABAD_WARDS);
 }
 
 export const wardFeatures = buildWardFeatures();

@@ -26,10 +26,19 @@ export default function Signup() {
     setError('');
     setLoading(true);
 
+    const trimmedEmail = email.trim();
+    const trimmedName = name.trim();
+
     const { data: authData, error: signUpError } = await supabase.auth.signUp({
-      email: email.trim(),
+      email: trimmedEmail,
       password,
-      options: { data: { name: name.trim() } },
+      options: {
+        data: {
+          name: trimmedName,
+          ward_id: wardId || null,
+          role: 'citizen',
+        },
+      },
     });
 
     if (signUpError) {
@@ -38,16 +47,26 @@ export default function Signup() {
       return;
     }
 
-    if (authData.user) {
-      const { error: profileError } = await supabase.from('users').insert({
-        id: authData.user.id,
-        email: email.trim(),
-        name: name.trim(),
-        role: 'citizen',
-        ward_id: wardId ? Number(wardId) : null,
-      });
+    if (!authData.user) {
+      setLoading(false);
+      setError('Could not create account. Please try again.');
+      return;
+    }
 
-      if (profileError) {
+    // Profile row is created by DB trigger (handle_new_user). If session exists, upsert ward/name.
+    if (authData.session) {
+      const { error: profileError } = await supabase.from('users').upsert(
+        {
+          id: authData.user.id,
+          email: trimmedEmail,
+          name: trimmedName,
+          role: 'citizen',
+          ward_id: wardId ? Number(wardId) : null,
+        },
+        { onConflict: 'id' }
+      );
+
+      if (profileError && !/duplicate|violates row-level security/i.test(profileError.message)) {
         setLoading(false);
         setError(profileError.message);
         return;
@@ -59,7 +78,12 @@ export default function Signup() {
     if (authData.session) {
       navigate('/dashboard');
     } else {
-      navigate('/login', { state: { message: 'Check your email to confirm your account.' } });
+      navigate('/login', {
+        state: {
+          message:
+            'Account created. Check your email to confirm, then sign in. If you already confirmed, sign in now.',
+        },
+      });
     }
   };
 

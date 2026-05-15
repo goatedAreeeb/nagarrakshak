@@ -8,7 +8,11 @@ import ComplaintPage from './pages/ComplaintPage';
 import FeedPage from './pages/FeedPage';
 import MapPage from './pages/MapPage';
 import BillboardPage from './pages/BillboardPage';
+import BillboardPublishPage from './pages/BillboardPublishPage';
+import CityHeadRoute from './components/auth/CityHeadRoute';
+import CityAnalyticsPage from './pages/CityAnalyticsPage';
 import NotFoundPage from './pages/NotFoundPage';
+import LandingPage from './pages/LandingPage';
 import { CityNoticesProvider } from './contexts/CityNoticesContext';
 
 function ProtectedRoute({ children, citizenOnly = false }) {
@@ -54,6 +58,7 @@ function ProtectedRoute({ children, citizenOnly = false }) {
 export default function App() {
   return (
     <Routes>
+      <Route path="/" element={<LandingPage />} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/signup" element={<SignupPage />} />
       <Route
@@ -96,7 +101,26 @@ export default function App() {
           </ProtectedRoute>
         }
       />
-      <Route path="/" element={<Navigate to="/dashboard" replace />} />
+      <Route
+        path="/billboard/publish"
+        element={
+          <ProtectedRoute>
+            <CityHeadRoute>
+              <BillboardPublishPage />
+            </CityHeadRoute>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/city/analytics"
+        element={
+          <ProtectedRoute>
+            <CityHeadRoute>
+              <CityAnalyticsPage />
+            </CityHeadRoute>
+          </ProtectedRoute>
+        }
+      />
       <Route path="*" element={<NotFoundPage />} />
     </Routes>
   );

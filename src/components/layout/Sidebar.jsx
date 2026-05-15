@@ -1,4 +1,4 @@
-import { NavLink, useLocation } from 'react-router-dom';
+import { NavLink } from 'react-router-dom';
 import {
   Shield,
   LayoutDashboard,
@@ -9,6 +9,7 @@ import {
   Bell,
   LogOut,
   Megaphone,
+  PenSquare,
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNotificationContext } from '../../contexts/NotificationContext';
@@ -52,9 +53,9 @@ export default function Sidebar({ onOpenNotifications }) {
   const { user, profile, role, signOut } = useAuth();
   const { unreadCount } = useNotificationContext();
   const { filed, resolved, resolutionRate, loading } = useUserComplaintStats(user?.id);
-  const location = useLocation();
-  const showOfficerBadge = hasMinRole(role, 'officer');
+  const showOfficerBadge = hasMinRole(role, 'officer') && role !== 'city';
   const isCitizen = role === 'citizen';
+  const isCityHead = role === 'city';
 
   return (
     <aside className="hidden md:flex fixed left-0 top-0 bottom-0 w-[275px] flex-col z-40 border-r border-glass-border bg-black/40 backdrop-blur-xl">
@@ -94,20 +95,11 @@ export default function Sidebar({ onOpenNotifications }) {
         <NavItem to="/map" icon={Map} label="Map" />
         <NavItem to="/feed" icon={Rss} label="Feed" />
         <NavItem to="/billboard" icon={Megaphone} label="Bulletin" />
-        {hasMinRole(role, 'citizen') && <NavItem to="/report" icon={FilePlus} label="Post" />}
         {role === 'city' && (
-          <NavLink
-            to="/dashboard#analytics"
-            className={() =>
-              `nav-item ${
-                location.pathname === '/dashboard' && location.hash === '#analytics' ? 'nav-item-active' : ''
-              }`
-            }
-          >
-            <BarChart3 className="h-[22px] w-[22px]" strokeWidth={2} />
-            <span>Analytics</span>
-          </NavLink>
+          <NavItem to="/billboard/publish" icon={PenSquare} label="Post Bulletin" />
         )}
+        {isCitizen && <NavItem to="/report" icon={FilePlus} label="Post" />}
+        {isCityHead && <NavItem to="/city/analytics" icon={BarChart3} label="Analytics" />}
         {showOfficerBadge && (
           <button type="button" onClick={onOpenNotifications} className="nav-item w-full mt-4">
             <Bell className="h-[22px] w-[22px]" strokeWidth={2} />

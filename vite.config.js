@@ -9,4 +9,14 @@ export default defineConfig({
   server: {
     port: 5173,
   },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes('maplibre-gl')) return 'maplibre';
+          if (id.includes('deck.gl') || id.includes('@deck.gl')) return 'deck';
+        },
+      },
+    },
+  },
 });

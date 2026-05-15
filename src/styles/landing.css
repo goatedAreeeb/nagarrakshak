@@ -1,0 +1,216 @@
+/**
+ * Landing page — premium civic command theme
+ */
+
+.landing-shell {
+  --lp-bg: #050508;
+  --lp-surface: #0c0c10;
+  --lp-border: #1e2430;
+  --lp-cyan: #00e5ff;
+  --lp-amber: #ffb300;
+  --lp-red: #ff3d00;
+  --lp-green: #00e676;
+
+  background-color: var(--lp-bg) !important;
+  color: #e2e8f0;
+  font-family: 'DM Sans', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  position: relative;
+  isolation: isolate;
+}
+
+/* Ambient atmosphere */
+.landing-shell::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 55% 45% at 12% 18%, rgba(0, 229, 255, 0.09), transparent 55%),
+    radial-gradient(ellipse 42% 36% at 78% 24%, rgba(167, 139, 250, 0.07), transparent 52%),
+    radial-gradient(ellipse 50% 40% at 88% 72%, rgba(255, 61, 0, 0.06), transparent 50%),
+    radial-gradient(ellipse 80% 50% at 50% 100%, rgba(0, 229, 255, 0.04), transparent 45%);
+}
+
+.landing-shell::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.35;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
+}
+
+.landing-shell > * {
+  position: relative;
+  z-index: 1;
+}
+
+.landing-display {
+  font-family: 'Syne', system-ui, sans-serif;
+  letter-spacing: -0.02em;
+}
+
+.landing-mono {
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+}
+
+/* Hero headline — always visible, no blend-mode tricks */
+.landing-hero-outline {
+  color: transparent;
+  -webkit-text-stroke: 1.5px rgba(255, 255, 255, 0.92);
+  text-shadow: 0 0 80px rgba(0, 229, 255, 0.15);
+}
+
+.landing-hero-fill {
+  background: linear-gradient(135deg, #ffffff 0%, #a5f3fc 45%, #00e5ff 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 0 40px rgba(0, 229, 255, 0.25));
+}
+
+.landing-kicker {
+  color: #94a3b8;
+  font-size: 1.05rem;
+  line-height: 1.75;
+}
+
+.landing-kicker-strong {
+  color: var(--lp-cyan);
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  text-shadow: 0 0 24px rgba(0, 229, 255, 0.45);
+}
+
+.landing-section-tag {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+
+.landing-glass-header {
+  background: linear-gradient(180deg, rgba(5, 5, 8, 0.92) 0%, rgba(5, 5, 8, 0.4) 70%, transparent 100%);
+  backdrop-filter: blur(12px);
+}
+
+.landing-story-panel {
+  background: linear-gradient(90deg, rgba(5, 5, 8, 0.97) 0%, rgba(5, 5, 8, 0.85) 85%, transparent 100%);
+}
+
+.landing-map-panel {
+  background-color: var(--lp-bg);
+  min-height: 100%;
+}
+
+/* Token overrides */
+.landing-shell .bg-background,
+.landing-shell .bg-lp-background {
+  background-color: var(--lp-bg) !important;
+}
+
+.landing-shell .bg-surface,
+.landing-shell .bg-lp-surface {
+  background-color: var(--lp-surface) !important;
+}
+
+.landing-shell .border-border,
+.landing-shell .border-lp-border {
+  border-color: var(--lp-border) !important;
+}
+
+.landing-shell .text-lp-border {
+  color: var(--lp-border) !important;
+}
+
+.landing-shell .text-accent-cyan,
+.landing-shell .text-lp-cyan {
+  color: var(--lp-cyan) !important;
+}
+
+.landing-shell .text-accent-amber,
+.landing-shell .text-lp-amber {
+  color: var(--lp-amber) !important;
+}
+
+.landing-shell .text-accent-red,
+.landing-shell .text-lp-red {
+  color: var(--lp-red) !important;
+}
+
+.landing-shell .text-accent-green,
+.landing-shell .text-lp-green {
+  color: var(--lp-green) !important;
+}
+
+.landing-shell .bg-accent-red,
+.landing-shell .bg-lp-red {
+  background-color: var(--lp-red) !important;
+}
+
+.landing-shell .bg-accent-amber,
+.landing-shell .bg-lp-amber {
+  background-color: var(--lp-amber) !important;
+}
+
+.landing-shell .bg-accent-cyan,
+.landing-shell .bg-lp-cyan {
+  background-color: var(--lp-cyan) !important;
+}
+
+.landing-shell .border-accent-cyan,
+.landing-shell .border-lp-cyan {
+  border-color: var(--lp-cyan) !important;
+}
+
+.landing-shell .border-accent-amber,
+.landing-shell .border-lp-amber {
+  border-color: var(--lp-amber) !important;
+}
+
+.landing-shell .border-accent-red,
+.landing-shell .border-lp-red {
+  border-color: var(--lp-red) !important;
+}
+
+.landing-shell .shadow-glow-cyan {
+  box-shadow: 0 0 28px -4px rgba(0, 229, 255, 0.55);
+}
+
+.landing-shell .shadow-glow-red {
+  box-shadow: 0 0 28px -4px rgba(255, 61, 0, 0.5);
+}
+
+.landing-shell .shadow-glow-amber {
+  box-shadow: 0 0 28px -4px rgba(255, 179, 0, 0.45);
+}
+
+.landing-shell .landing-image-frame {
+  border: 1px solid var(--lp-border);
+  background: var(--lp-surface);
+  box-shadow:
+    0 24px 48px rgba(0, 0, 0, 0.5),
+    0 0 0 1px rgba(255, 255, 255, 0.04) inset;
+}
+
+.landing-shell .landing-image-frame:hover img {
+  filter: grayscale(0) contrast(1.05);
+}
+
+.landing-shell ::-webkit-scrollbar {
+  width: 5px;
+}
+
+.landing-shell ::-webkit-scrollbar-thumb {
+  background: #2a3140;
+  border-radius: 4px;
+}
+
+.landing-shell .maplibregl-ctrl-group {
+  display: none;
+}

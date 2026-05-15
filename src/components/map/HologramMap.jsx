@@ -20,19 +20,11 @@ import {
   MAPBOX_TOKEN,
   getHologramMapStyle,
 } from '../../lib/mapConfig';
-const ISSUE_ZOOM_MIN = 11;
-const LABEL_ZOOM_MIN = 10.3;
-const ACTIVE_STATUSES = ['open', 'assigned', 'in_progress', 'reopened'];
+import { wardFillColor, wardLineColor, wardElevation } from '../../lib/mapHealthColors';
 
-function healthRgb(score) {
-  const t = Math.max(0, Math.min(100, score ?? 0)) / 100;
-  return [
-    Math.round(239 * (1 - t) + 16 * t),
-    Math.round(68 * (1 - t) + 185 * t),
-    Math.round(68 * (1 - t) + 129 * t),
-    200,
-  ];
-}
+const ISSUE_ZOOM_MIN = 11;
+const LABEL_ZOOM_MIN = 10;
+const ACTIVE_STATUSES = ['open', 'assigned', 'in_progress', 'reopened'];
 
 function flyTo(view, { longitude, latitude, zoom = 14, pitch = 55, bearing = -8 }) {
   return {
@@ -57,8 +49,8 @@ function LayerToggle({ label, icon: Icon, active, onToggle }) {
       className={cn(
         'flex cursor-pointer items-center gap-2 rounded-lg border px-3 py-2 text-xs font-medium transition-colors',
         active
-          ? 'border-accent-cyan/50 bg-accent-cyan/10 text-accent-cyan'
-          : 'border-border-default bg-bg-surface/90 text-text-secondary hover:border-border-strong'
+          ? 'border-cyan-400/50 bg-cyan-500/20 text-cyan-200 shadow-lg backdrop-blur-md'
+          : 'border-white/15 bg-slate-950/70 text-slate-300 backdrop-blur-md hover:border-white/30 hover:bg-slate-900/80'
       )}
     >
       <Icon size={14} aria-hidden />
@@ -73,7 +65,7 @@ export default function HologramMap() {
   const [wardGeo, setWardGeo] = useState(() => buildWardFeaturesFromRows());
   const [complaints, setComplaints] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [hover, setHover] = useState({ ward: null, x: 0, y: 0 });
+  const [hover, setHover] = useState({ ward: null, wardId: null, x: 0, y: 0 });
   const [selectedIssue, setSelectedIssue] = useState(null);
   const [panelOpen, setPanelOpen] = useState(false);
 
@@ -129,8 +121,11 @@ export default function HologramMap() {
   const showIssues = layers.issues && viewState.zoom >= ISSUE_ZOOM_MIN;
   const showLabels = layers.labels && viewState.zoom >= LABEL_ZOOM_MIN;
 
+  const hoveredWardId = hover.wardId;
+
   const deckLayers = useMemo(() => {
     const result = [];
+    const isHovered = (f) => f.properties.ward_id === hoveredWardId;
 
     if (layers.wards) {
       result.push(
@@ -141,20 +136,33 @@ export default function HologramMap() {
           extruded: true,
           wireframe: true,
           filled: true,
-          getElevation: (f) => Math.max(80, (f.properties.open_issues ?? 0) * 70 + 40),
-          elevationScale: 1,
-          getFillColor: (f) => healthRgb(f.properties.health_score),
-          getLineColor: [0, 212, 255, 120],
+          material: {
+            ambient: 0.35,
+            diffuse: 0.6,
+            shininess: 32,
+            specularColor: [255, 255, 255],
+          },
+          getElevation: (f) => wardElevation(f.properties, { hovered: isHovered(f) }),
+          elevationScale: 1.2,
+          getFillColor: (f) => wardFillColor(f.properties, { hovered: isHovered(f) }),
+          getLineColor: (f) => wardLineColor(f.properties, { hovered: isHovered(f) }),
           lineWidthMinPixels: 1,
+          stroked: true,
+          transitions: {
+            getFillColor: 400,
+            getElevation: 400,
+          },
           onHover: (info) => {
             if (info.object) {
+              const p = info.object.properties;
               setHover({
-                ward: info.object.properties,
+                ward: p,
+                wardId: p.ward_id,
                 x: info.x,
                 y: info.y,
               });
             } else {
-              setHover({ ward: null, x: 0, y: 0 });
+              setHover({ ward: null, wardId: null, x: 0, y: 0 });
             }
           },
           onClick: (info) => {
@@ -163,30 +171,35 @@ export default function HologramMap() {
             setViewState((v) => flyTo(v, { longitude: p.lng, latitude: p.lat, zoom: 13.2 }));
           },
           updateTriggers: {
-            getFillColor: [wardGeo],
-            getElevation: [wardGeo],
+            getFillColor: [wardGeo, hoveredWardId],
+            getElevation: [wardGeo, hoveredWardId],
+            getLineColor: [hoveredWardId],
           },
         })
       );
     }
 
     if (showLabels) {
+      const labeled = wardGeo.features.filter((f) => f.properties.is_named);
       result.push(
         new TextLayer({
           id: 'ward-labels',
-          data: wardGeo.features,
+          data: labeled,
           pickable: false,
           getPosition: (f) => [f.properties.lng, f.properties.lat],
           getText: (f) => f.properties.ward_name,
-          getSize: 12,
-          getColor: [226, 232, 240, 230],
+          getSize: 13,
+          getColor: [255, 255, 255, 255],
           getAngle: 0,
           getTextAnchor: 'middle',
           getAlignmentBaseline: 'center',
           fontFamily: 'Inter, system-ui, sans-serif',
-          fontWeight: 600,
-          outlineWidth: 2,
-          outlineColor: [7, 13, 28, 220],
+          fontWeight: 'bold',
+          outlineWidth: 3,
+          outlineColor: [15, 23, 42, 255],
+          background: true,
+          getBackgroundColor: [15, 23, 42, 200],
+          backgroundPadding: [4, 2],
         })
       );
     }
@@ -223,7 +236,7 @@ export default function HologramMap() {
     }
 
     return result;
-  }, [wardGeo, complaints, layers, showIssues, showLabels]);
+  }, [wardGeo, complaints, layers, showIssues, showLabels, hoveredWardId]);
 
   const onViewStateChange = useCallback(({ viewState: next }) => {
     setViewState(next);
@@ -239,16 +252,16 @@ export default function HologramMap() {
   return (
     <div className="relative h-full w-full overflow-hidden bg-bg-base">
       <div className="pointer-events-none absolute inset-x-0 top-0 z-20 flex justify-center px-4 pt-4">
-        <div className="pointer-events-auto w-full max-w-xl rounded-xl border border-border-glow bg-bg-surface/95 px-4 py-3 shadow-glow-cyan backdrop-blur-sm">
+        <div className="pointer-events-auto w-full max-w-xl rounded-2xl border border-white/20 bg-slate-950/80 px-4 py-3 shadow-2xl backdrop-blur-xl">
           <div className="flex items-center justify-between gap-4">
             <div>
-              <div className="text-xs font-medium uppercase tracking-wider text-text-hint">
+              <div className="text-xs font-medium uppercase tracking-wider text-slate-300">
                 Greater Hyderabad · city health
               </div>
-              <div className="mt-0.5 text-2xl font-bold tabular-nums text-accent-cyan">{cityHealth}</div>
+              <div className="mt-0.5 text-2xl font-bold tabular-nums text-white">{cityHealth}</div>
             </div>
             <div className="flex-1">
-              <div className="h-2.5 overflow-hidden rounded-full bg-bg-elevated">
+              <div className="h-2.5 overflow-hidden rounded-full bg-white/15">
                 <div
                   className="h-full rounded-full bg-gradient-to-r from-accent-red via-accent-amber to-accent-emerald transition-all duration-500"
                   style={{ width: `${cityHealth}%` }}
@@ -256,29 +269,31 @@ export default function HologramMap() {
               </div>
             </div>
           </div>
-          <div className="mt-2 flex justify-between text-[10px] text-text-hint">
-            <span>{wardGeo?.features?.length ?? 0} GHMC circles</span>
-            <span>Hover for population &amp; fixes</span>
+          <div className="mt-2 flex justify-between text-[10px] text-slate-400">
+            <span>{wardGeo?.features?.length ?? 0} areas</span>
+            <span className="text-red-300/90">Red = more open issues</span>
           </div>
         </div>
       </div>
 
       <div className="pointer-events-none absolute bottom-6 left-4 z-20">
-        <div className="pointer-events-auto rounded-xl border border-border-default bg-bg-surface/95 p-3 backdrop-blur-sm">
-          <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-text-hint">
-            Area health score
+        <div className="pointer-events-auto rounded-2xl border border-white/20 bg-slate-950/80 p-3 shadow-xl backdrop-blur-xl">
+          <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-300">
+            Area colors
           </div>
-          <div className="flex h-2 w-36 overflow-hidden rounded-full">
-            <div className="flex-1 bg-accent-red" title="0-33" />
-            <div className="flex-1 bg-accent-amber" title="34-66" />
-            <div className="flex-1 bg-accent-emerald" title="67-100" />
+          <div className="flex h-2.5 w-40 overflow-hidden rounded-full ring-1 ring-white/20">
+            <div className="flex-[2] bg-red-600" title="Many open issues" />
+            <div className="flex-1 bg-amber-500" title="Some issues" />
+            <div className="flex-1 bg-emerald-500" title="Healthy" />
+            <div className="flex-1 bg-slate-500" title="No data" />
           </div>
-          <div className="mt-3 text-xs font-semibold uppercase tracking-wide text-text-hint">
+          <p className="mt-1 text-[10px] text-slate-400">Red = critical · green = healthy</p>
+          <div className="mt-3 text-xs font-semibold uppercase tracking-wide text-slate-300">
             Issue severity
           </div>
           <div className="mt-1.5 flex flex-col gap-1">
             {[1, 2, 3, 4, 5].map((n) => (
-              <div key={n} className="flex items-center gap-2 text-xs text-text-secondary">
+              <div key={n} className="flex items-center gap-2 text-xs text-slate-200">
                 <div
                   className="h-2.5 w-2.5 rounded-full"
                   style={{ backgroundColor: severityColor(n) }}

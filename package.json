@@ -17,8 +17,14 @@
     "@deck.gl/layers": "^9.3.2",
     "@deck.gl/react": "^9.3.2",
     "@supabase/supabase-js": "^2.105.4",
+    "@turf/bbox": "^7.3.5",
+    "@turf/boolean-point-in-polygon": "^7.3.5",
+    "@turf/centroid": "^7.3.5",
+    "@turf/random": "^7.3.5",
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
+    "framer-motion": "^12.38.0",
+    "fuse.js": "^7.3.0",
     "jspdf": "^4.2.1",
     "jspdf-autotable": "^5.0.7",
     "lucide-react": "^1.16.0",
@@ -28,7 +34,8 @@
     "react-dom": "^19.2.6",
     "react-map-gl": "^8.1.1",
     "react-router-dom": "^7.15.1",
-    "recharts": "^3.8.1"
+    "recharts": "^3.8.1",
+    "zustand": "^5.0.13"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

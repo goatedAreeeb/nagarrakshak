@@ -9,7 +9,7 @@ const DEMO_ACCOUNTS = [
   { email: 'worker1@demo.com', label: 'Worker' },
   { email: 'officer1@demo.com', label: 'Officer' },
   { email: 'supervisor1@demo.com', label: 'Supervisor' },
-  { email: 'city1@demo.com', label: 'City' },
+  { email: 'city1@demo.com', label: 'City Head' },
 ];
 
 export default function Login() {

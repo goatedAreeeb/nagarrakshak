@@ -27,6 +27,7 @@ export default function Navbar({ title, breadcrumb = [], onOpenNotifications }) 
   const { unreadCount } = useNotificationContext();
   const { filed, resolved, open, loading } = useUserComplaintStats(user?.id);
   const showCitizenMetrics = role === 'citizen';
+  const showNotifications = role !== 'city';
 
   return (
     <header className="sticky top-0 z-30 border-b border-glass-border bg-black/60 backdrop-blur-xl">
@@ -70,19 +71,21 @@ export default function Navbar({ title, breadcrumb = [], onOpenNotifications }) 
               Post
             </Link>
           )}
-          <button
-            type="button"
-            onClick={onOpenNotifications}
-            className="relative flex h-9 w-9 items-center justify-center rounded-full hover:bg-white/[0.1] transition-colors"
-            aria-label="Notifications"
-          >
-            <Bell className="h-5 w-5" />
-            {unreadCount > 0 && (
-              <span className="absolute top-0 right-0 h-4 min-w-4 px-1 flex items-center justify-center rounded-full bg-white text-void text-[10px] font-bold">
-                {unreadCount > 9 ? '9+' : unreadCount}
-              </span>
-            )}
-          </button>
+          {showNotifications && (
+            <button
+              type="button"
+              onClick={onOpenNotifications}
+              className="relative flex h-9 w-9 items-center justify-center rounded-full hover:bg-white/[0.1] transition-colors"
+              aria-label="Notifications"
+            >
+              <Bell className="h-5 w-5" />
+              {unreadCount > 0 && (
+                <span className="absolute top-0 right-0 h-4 min-w-4 px-1 flex items-center justify-center rounded-full bg-white text-void text-[10px] font-bold">
+                  {unreadCount > 9 ? '9+' : unreadCount}
+                </span>
+              )}
+            </button>
+          )}
           <div className="hidden md:block h-8 w-px bg-glass-border" />
           <div className="hidden md:flex h-8 w-8 items-center justify-center rounded-full bg-white/[0.12] text-xs font-bold border border-glass-border">
             {getInitials(profile?.name)}

@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Megaphone, Radio } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Megaphone, Radio, PenSquare } from 'lucide-react';
 import AppShell from '../components/layout/AppShell';
 import { useAuth } from '../contexts/AuthContext';
 import { useCityNotices } from '../contexts/CityNoticesContext';
@@ -9,7 +10,7 @@ import {
   parseGuidance,
   isNoticeLive,
 } from '../lib/noticeUtils';
-import { formatDate, cn, roleLabel } from '../lib/utils';
+import { formatDate, cn } from '../lib/utils';
 import NoticeDetailModal from '../components/billboard/NoticeDetailModal';
 import LoadingSpinner from '../components/shared/LoadingSpinner';
 import EmptyState from '../components/shared/EmptyState';
@@ -26,7 +27,7 @@ function BillboardPageContent() {
   const { role } = useAuth();
   const { notices, liveNotices, loading, error, refresh } = useCityNotices();
   const [selected, setSelected] = useState(null);
-  const canPublish = role === 'city' || role === 'zonal';
+  const isCityHead = role === 'city';
 
   const archived = notices.filter((n) => !isNoticeLive(n));
 
@@ -65,9 +66,9 @@ function BillboardPageContent() {
             icon={Megaphone}
             title="No active bulletins"
             description={
-              canPublish
-                ? 'Publish an outbreak or health campaign notice from the City Command dashboard.'
-                : 'Check back for official updates from the Municipal Commissioner.'
+              isCityHead
+                ? 'Use Post Bulletin in the sidebar to publish an official city notice.'
+                : 'Check back for official updates from the City Head.'
             }
           />
         ) : liveNotices.length > 0 ? (
@@ -96,10 +97,13 @@ function BillboardPageContent() {
           </section>
         )}
 
-        {canPublish && (
-          <p className="text-center text-xs text-text-muted">
-            To publish: City Command → Bulletin publisher · Signed in as {roleLabel(role)}
-          </p>
+        {isCityHead && (
+          <div className="flex justify-center">
+            <Link to="/billboard/publish" className="btn-primary inline-flex items-center gap-2 text-sm">
+              <PenSquare size={16} />
+              Post bulletin
+            </Link>
+          </div>
         )}
 
         <button type="button" onClick={refresh} className="btn-ghost mx-auto block text-sm">
