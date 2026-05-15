@@ -12,6 +12,7 @@ import {
   analyzeComplaint,
   classifyComplaintLocally,
   buildClassificationContext,
+  SLA_BY_SEVERITY,
 } from '../../../lib/gemini';
 import { checkDuplicate } from '../../../lib/duplicateCheck';
 import { supabase } from '../../../lib/supabase';
@@ -40,6 +41,7 @@ export default function StepAIResult({
   wardId,
   voiceNoteBase64,
   voiceNoteMime,
+  safetySensitive,
   aiResult,
   setAiResult,
   duplicateInfo,
@@ -65,10 +67,12 @@ export default function StepAIResult({
       description,
       hasVoice: Boolean(voiceNoteBase64),
       hasImage: Boolean(imageBase64),
+      safetySensitive,
     });
     const local = classifyComplaintLocally(description, {
       hasVoice: Boolean(voiceNoteBase64),
       hasImage: Boolean(imageBase64),
+      safetySensitive,
     });
     setAiResult(local);
     setAnalyzing(true);
@@ -80,10 +84,11 @@ export default function StepAIResult({
 
     analyzeComplaint({
       imageBase64,
-      description: classContext,
+      description,
       lat,
       lng,
       hasVoice: Boolean(voiceNoteBase64),
+      safetySensitive,
     })
       .then((result) => {
         if (cancelled) return;
@@ -114,6 +119,7 @@ export default function StepAIResult({
     lng,
     setAiResult,
     setDuplicateInfo,
+    safetySensitive,
   ]);
 
   const handleSubmit = async () => {
@@ -159,6 +165,12 @@ export default function StepAIResult({
 
       const isDup = Boolean(duplicateInfo?.isDuplicate);
 
+      const submitSeverity = safetySensitive ? Math.max(4, aiResult.severity) : aiResult.severity;
+      const submitSlaHours = SLA_BY_SEVERITY[submitSeverity - 1];
+
+      const deptValue = (aiResult.dept || 'Other').trim() || 'Other';
+      const divisionValue = (aiResult.division || 'General').trim() || 'General';
+
       const payload = {
         citizen_id: user.id,
         image_url: imageUrl,
@@ -167,10 +179,10 @@ export default function StepAIResult({
         lng,
         address: address.trim() || null,
         description: description.trim(),
-        dept: aiResult.dept,
-        division: aiResult.division,
-        severity: aiResult.severity,
-        sla_hours: aiResult.sla_hours,
+        dept: deptValue,
+        division: divisionValue,
+        severity: submitSeverity,
+        sla_hours: submitSlaHours,
         sla_deadline: null,
         ward_id: wardId,
         assigned_to: null,
@@ -178,14 +190,25 @@ export default function StepAIResult({
         ai_reasoning: aiResult.ai_reasoning,
         is_duplicate: isDup,
         master_complaint_id: isDup ? duplicateInfo.masterId : null,
+        safety_sensitive: Boolean(safetySensitive),
       };
 
-      const { data: complaint, error: insertError } = await supabase
-        .from('complaints')
-        .insert(payload)
-        .select('id')
-        .single();
+      let insertResult = await supabase.from('complaints').insert(payload).select('id').single();
 
+      // DBs without migration: safety_sensitive column causes 400 — retry without it
+      if (
+        insertResult.error &&
+        /safety_sensitive|schema cache|PGRST204/i.test(insertResult.error.message || '')
+      ) {
+        const { safety_sensitive: _drop, ...withoutFlag } = payload;
+        insertResult = await supabase
+          .from('complaints')
+          .insert(withoutFlag)
+          .select('id')
+          .single();
+      }
+
+      const { data: complaint, error: insertError } = insertResult;
       if (insertError) throw new Error(insertError.message);
 
       if (isDup && duplicateInfo.masterId) {
@@ -196,13 +219,14 @@ export default function StepAIResult({
           .eq('id', duplicateInfo.masterId);
       }
 
-      const officer = await findOfficerForDept(aiResult.dept);
+      const officer = await findOfficerForDept(deptValue);
       if (officer?.id) {
+        const prefix = safetySensitive ? 'Safety-sensitive report · ' : '';
         await createNotification(
           officer.id,
           'complaint_assigned',
-          'New complaint to review',
-          `${aiResult.dept} issue reported near ${address || 'your ward'} — assign a worker and set SLA.`,
+          safetySensitive ? 'Safety-sensitive report to review' : 'New complaint to review',
+          `${prefix}${deptValue} issue reported near ${address || 'your ward'} — assign a worker and set SLA.`,
           complaint.id
         );
       }
@@ -222,6 +246,11 @@ export default function StepAIResult({
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const displaySeverity =
+    aiResult && safetySensitive ? Math.max(4, aiResult.severity) : aiResult?.severity;
+  const displaySlaHours =
+    aiResult && displaySeverity ? SLA_BY_SEVERITY[displaySeverity - 1] : aiResult?.sla_hours;
+
   if (submitted && ticketId) {
     return (
       <div className="max-w-lg mx-auto text-center animate-fade-in py-4">
@@ -231,6 +260,13 @@ export default function StepAIResult({
         <h2 className="text-2xl font-semibold text-text-primary mb-2">Complaint submitted</h2>
         <p className="text-text-secondary mb-6">
           Your report has been logged and routed to the relevant department.
+          {safetySensitive && (
+            <>
+              {' '}
+              It is flagged for <span className="text-text-primary font-medium">priority review</span>{' '}
+              because you used the safety-sensitive path.
+            </>
+          )}
         </p>
 
         <div className="card-elevated p-4 mb-4 text-left">
@@ -284,6 +320,12 @@ export default function StepAIResult({
         </h2>
         <p className="text-sm text-text-secondary mt-1">
           Review how NagarRakshak categorized your complaint before submitting.
+          {safetySensitive && (
+            <span className="block mt-2 text-rose-200/90 text-[13px]">
+              Priority filing: severity will be at least high (4/5) with a shorter SLA so staff see it
+              sooner.
+            </span>
+          )}
         </p>
       </div>
 
@@ -294,10 +336,10 @@ export default function StepAIResult({
       )}
 
       {analyzing && aiResult && (
-        <p className="mb-4 flex items-center gap-2 text-xs text-text-muted">
+        <div className="mb-4 flex items-center gap-2 text-xs text-text-muted" role="status">
           <LoadingSpinner size="sm" />
-          Enhancing classification with AI…
-        </p>
+          <span>Enhancing classification with AI…</span>
+        </div>
       )}
 
       {!aiResult && analyzing ? (
@@ -314,7 +356,7 @@ export default function StepAIResult({
             </div>
             <div className="stat-card">
               <p className="text-xs text-text-hint uppercase tracking-wide mb-2">Severity</p>
-              <SeverityBadge severity={aiResult.severity} />
+              <SeverityBadge severity={displaySeverity} />
             </div>
           </div>
 
@@ -322,7 +364,7 @@ export default function StepAIResult({
             <div className="flex flex-wrap gap-2">
               <span className="badge-violet">{aiResult.division}</span>
               <span className="badge-cyan">{aiResult.urgency_label}</span>
-              <span className="badge-amber">SLA: {aiResult.sla_hours}h</span>
+              <span className="badge-amber">SLA: {displaySlaHours}h</span>
               {aiResult.location_risk && (
                 <span className="badge-red">High-risk zone</span>
               )}

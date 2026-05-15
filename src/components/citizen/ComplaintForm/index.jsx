@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Phone, Shield } from 'lucide-react';
 import { useComplaintDraft } from '../../../contexts/ComplaintDraftContext.jsx';
 import StepCamera from './StepCamera';
 import StepLocation from './StepLocation';
@@ -20,6 +20,7 @@ export default function ComplaintForm() {
     setStep,
     resetDraft,
     setImageBase64,
+    setReportWithoutPhoto,
     setLat,
     setLng,
     setAddress,
@@ -36,6 +37,8 @@ export default function ComplaintForm() {
   const {
     step,
     imageBase64,
+    reportWithoutPhoto,
+    safetySensitive,
     lat,
     lng,
     address,
@@ -53,6 +56,9 @@ export default function ComplaintForm() {
   const shared = {
     imageBase64,
     setImageBase64,
+    reportWithoutPhoto,
+    setReportWithoutPhoto,
+    safetySensitive,
     lat,
     setLat,
     lng,
@@ -76,12 +82,17 @@ export default function ComplaintForm() {
     submitted,
     setSubmitted: (flag, id) => setSubmitted(flag, id),
     ticketId,
+    safetySensitive,
   };
 
+  /** No-photo: 15 chars text, or 10 chars if a voice note is recorded (voice carries detail). */
+  const descriptionMinChars =
+    !reportWithoutPhoto ? 10 : voiceNoteBase64 ? 10 : 15;
+
   const canProceed = () => {
-    if (step === 0) return Boolean(imageBase64);
+    if (step === 0) return Boolean(imageBase64) || reportWithoutPhoto;
     if (step === 1) return lat != null && lng != null && wardId != null;
-    if (step === 2) return description.trim().length >= 10;
+    if (step === 2) return description.trim().length >= descriptionMinChars;
     return false;
   };
 
@@ -90,7 +101,12 @@ export default function ComplaintForm() {
   };
 
   const handleBack = () => {
-    if (step > 0) setStep(step - 1);
+    if (step > 0) {
+      setStep(step - 1);
+      return;
+    }
+    resetDraft();
+    navigate('/dashboard');
   };
 
   if (submitted && ticketId) {
@@ -106,6 +122,27 @@ export default function ComplaintForm() {
 
   return (
     <div className="max-w-2xl mx-auto animate-slide-up">
+      {safetySensitive && (
+        <div className="mb-6 rounded-xl border border-rose-400/35 bg-rose-500/[0.08] px-4 py-3.5 text-[14px] leading-relaxed text-text-secondary">
+          <p className="flex items-center gap-2 font-semibold text-rose-100">
+            <Shield className="h-4 w-4 shrink-0 text-rose-200" strokeWidth={2} aria-hidden />
+            Safety-sensitive report
+          </p>
+          <p className="mt-2">
+            You can continue <strong className="text-text-primary">without a photo</strong> and add
+            a voice note on the details step if that feels safer. This form logs a civic ticket for
+            follow-up — it does <strong className="text-text-primary">not</strong> replace emergency
+            response.
+          </p>
+          <p className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[13px]">
+            <span className="inline-flex items-center gap-1.5 text-text-primary">
+              <Phone className="h-3.5 w-3.5 shrink-0" aria-hidden />
+              Emergencies: dial <strong>112</strong> (all-in-one) or <strong>100</strong> (police).
+            </span>
+          </p>
+        </div>
+      )}
+
       <div className="flex items-center justify-center gap-3 mb-8">
         {STEPS.map((s, i) => (
           <div key={s.id} className="flex items-center gap-3">
@@ -148,7 +185,9 @@ export default function ComplaintForm() {
       <div className="card-elevated p-6 sm:p-8 border border-border-default shadow-card">
         {step === 0 && <StepCamera {...shared} />}
         {step === 1 && <StepLocation {...shared} />}
-        {step === 2 && <StepDescription {...shared} />}
+        {step === 2 && (
+          <StepDescription {...shared} minChars={descriptionMinChars} reportWithoutPhoto={reportWithoutPhoto} />
+        )}
         {step === 3 && (
           <StepAIResult
             {...shared}
@@ -162,11 +201,10 @@ export default function ComplaintForm() {
             <button
               type="button"
               onClick={handleBack}
-              disabled={step === 0}
-              className="btn-ghost flex items-center gap-1 disabled:opacity-30 disabled:cursor-not-allowed"
+              className="btn-secondary flex items-center gap-1 min-h-[44px] px-4"
             >
-              <ChevronLeft size={18} />
-              Back
+              <ChevronLeft size={18} aria-hidden />
+              {step === 0 ? 'Cancel' : 'Back'}
             </button>
             <button
               type="button"

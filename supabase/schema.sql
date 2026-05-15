@@ -78,6 +78,7 @@ CREATE TABLE complaints (
   closure_image_url TEXT,
   citizen_verified BOOLEAN,
   ai_reasoning TEXT,
+  safety_sensitive BOOLEAN DEFAULT FALSE,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW(),
   resolved_at TIMESTAMPTZ

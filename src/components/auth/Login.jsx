@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 
-const DEMO_PASSWORD = 'Demo@1234';
+const DEMO_PASSWORD = 'demo123';
 
 const DEMO_ACCOUNTS = [
   { email: 'citizen1@demo.com', label: 'Citizen' },
@@ -113,7 +113,7 @@ export default function Login() {
             </button>
           ))}
         </div>
-        <p className="text-[10px] text-text-hint text-center mt-2">Password: Demo@1234</p>
+        <p className="text-[10px] text-text-hint text-center mt-2">Password: demo123</p>
       </div>
     </div>
   );

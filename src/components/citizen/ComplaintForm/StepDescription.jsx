@@ -19,6 +19,8 @@ export default function StepDescription({
   voiceNoteMime,
   setVoiceNote,
   clearVoiceNote,
+  minChars = 10,
+  reportWithoutPhoto = false,
 }) {
   const mediaRecorderRef = useRef(null);
   const chunksRef = useRef([]);
@@ -144,16 +146,32 @@ export default function StepDescription({
   };
 
   const charCount = description.trim().length;
-  const minChars = 10;
   const formatTime = (s) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+  const noPhotoNeedsLongerText = reportWithoutPhoto && !voiceNoteBase64;
 
   return (
     <div>
       <div className="mb-6">
         <h2 className="text-lg font-semibold text-text-primary">Describe the issue</h2>
-        <p className="text-sm text-text-secondary mt-1">
-          Explain what happened, when you noticed it, and any safety concerns. Minimum {minChars}{' '}
-          characters. A voice note is optional.
+        <p className="text-sm text-text-secondary mt-1 leading-relaxed">
+          Explain what happened, when, and where.
+          {noPhotoNeedsLongerText ? (
+            <span className="block mt-2 text-neutral-200">
+              Without a photo, enter at least <strong className="text-white">{minChars}</strong>{' '}
+              characters below — or record a{' '}
+              <strong className="text-white">voice note</strong> first to continue with only{' '}
+              <strong className="text-white">10</strong> characters in this box.
+            </span>
+          ) : voiceNoteBase64 && reportWithoutPhoto ? (
+            <span className="block mt-2 text-[13px] text-cyan-200/95">
+              Voice note will be sent with your report. At least {minChars} characters in the box is
+              enough.
+            </span>
+          ) : (
+            <span className="block mt-2 text-neutral-200">
+              Minimum <strong className="text-white">{minChars}</strong> characters.
+            </span>
+          )}
         </p>
       </div>
 
@@ -175,8 +193,8 @@ export default function StepDescription({
 
       <div className="flex items-center justify-between mt-3">
         <p
-          className={`text-xs ${
-            charCount >= minChars ? 'text-accent-emerald' : 'text-text-hint'
+          className={`text-sm font-medium ${
+            charCount >= minChars ? 'text-accent-emerald' : 'text-neutral-300'
           }`}
         >
           {charCount} / {minChars}+ characters
@@ -184,10 +202,14 @@ export default function StepDescription({
       </div>
 
       <div className="mt-6 rounded-xl border border-white/15 bg-white/[0.06] p-4">
-        <p className="text-sm font-medium text-text-primary mb-1">Optional voice note</p>
-        <p className="text-xs text-text-secondary mb-4">
-          Record up to {MAX_RECORD_SEC} seconds so officers hear tone and urgency. Not required to
-          submit.
+        <p className="text-sm font-medium text-text-primary mb-1">
+          {reportWithoutPhoto ? 'Voice note (recommended without a photo)' : 'Optional voice note'}
+        </p>
+        <p className="text-xs text-neutral-300 mb-4 leading-relaxed">
+          Record up to {MAX_RECORD_SEC} seconds so officers hear tone and urgency.
+          {reportWithoutPhoto
+            ? ' Lets you use a shorter written summary (10 characters) once recorded.'
+            : ' Not required to submit.'}
         </p>
 
         {voiceNoteBase64 ? (

@@ -1,251 +1,200 @@
 import { useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
+import { ChevronDown } from 'lucide-react';
+
+const CASES = [
+  {
+    place: 'Tolichowki',
+    title: 'Drainage overflows every monsoon',
+    body: 'Residents file the same flooding complaint each year. The ticket stays open with photos, dates, and ward assignment until GHMC records an action.',
+    image: '/images/flooded_street.png',
+    alt: 'Flooded lane in Tolichowki',
+    note: 'Open 180 days',
+  },
+  {
+    place: 'Miyapur',
+    title: 'Potholes on the main road',
+    body: 'A stretch near the metro was reported multiple times. Public status shows whether it was marked in progress, deferred, or closed—neighbours can verify.',
+    image: '/images/pothole_road.png',
+    alt: 'Damaged road in Miyapur',
+    note: 'Marked urgent',
+  },
+  {
+    place: 'Secunderabad',
+    title: 'Streetlights out for weeks',
+    body: 'After sunset the lane stays dark. Here every report gets a ticket number and an officer name from the day it is filed.',
+    image: '/images/broken_streetlights.png',
+    alt: 'Broken streetlights in Secunderabad',
+    note: 'No closure yet',
+  },
+];
+
+const heroEase = [0.22, 1, 0.36, 1];
+
+const SDG_GOALS = [
+  {
+    code: 'SDG 6',
+    title: 'Clean water & sanitation',
+    desc: 'Drainage, leaks, and flooding reports tied to accountable fixes.',
+    variant: 'sdg6',
+  },
+  {
+    code: 'SDG 11',
+    title: 'Sustainable cities',
+    desc: 'Safer roads, lighting, and public spaces tracked ward by ward.',
+    variant: 'sdg11',
+  },
+  {
+    code: 'SDG 16',
+    title: 'Peace, justice & strong institutions',
+    desc: 'Public timelines so civic response cannot disappear quietly.',
+    variant: 'sdg16',
+  },
+];
 
 export default function StoryPanel({ onSectionChange }) {
   const containerRef = useRef(null);
-  
+
   useEffect(() => {
     const handleScroll = () => {
       if (!containerRef.current) return;
       const sections = containerRef.current.querySelectorAll('.sys-chapter');
       const scrollPosition = containerRef.current.scrollTop + window.innerHeight / 3;
-      
+
       let currentSection = 0;
       sections.forEach((section, index) => {
-        const top = section.offsetTop;
-        if (scrollPosition >= top) {
-          currentSection = index;
-        }
+        if (scrollPosition >= section.offsetTop) currentSection = index;
       });
       onSectionChange(currentSection);
     };
 
     const container = containerRef.current;
-    if (container) {
-      container.addEventListener('scroll', handleScroll);
-      return () => container.removeEventListener('scroll', handleScroll);
-    }
+    if (!container) return undefined;
+    container.addEventListener('scroll', handleScroll);
+    handleScroll();
+    return () => container.removeEventListener('scroll', handleScroll);
   }, [onSectionChange]);
 
-  return (
-    <div 
-      ref={containerRef}
-      className="relative z-20 h-full w-full overflow-y-auto scroll-smooth bg-transparent text-slate-300"
-      style={{ scrollbarWidth: 'none' }}
-    >
-      <div className="max-w-3xl mx-auto px-12 py-32 pb-96 space-y-64">
-        
-        {/* HERO SECTION */}
-        <div className="min-h-[80vh] flex flex-col justify-center sys-chapter relative">
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 1 }}
-          >
-            <div className="landing-mono landing-kicker mb-12 max-w-2xl space-y-4">
-              <p>Every year, thousands of complaints disappear into silence.</p>
-              <p>Every day, our infrastructure decays without accountability.</p>
-              <p className="landing-kicker-strong !text-xl md:!text-2xl">It ends now.</p>
-            </div>
+  const scrollToContent = () => {
+    containerRef.current?.querySelector('#on-the-ground')?.scrollIntoView({ behavior: 'smooth' });
+  };
 
-            <h1 className="landing-display mb-12 text-7xl font-extrabold uppercase leading-[0.85] tracking-tight md:text-8xl lg:text-9xl">
-              <span className="block overflow-hidden">
-                <motion.span
-                  initial={{ y: '100%' }}
-                  animate={{ y: 0 }}
-                  transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-                  className="landing-hero-outline block"
-                >
-                  Your City.
-                </motion.span>
-              </span>
-              <span className="block overflow-hidden">
-                <motion.span
-                  initial={{ y: '100%' }}
-                  animate={{ y: 0 }}
-                  transition={{ duration: 0.8, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
-                  className="landing-hero-fill block"
-                >
-                  Your Voice.
-                </motion.span>
-              </span>
+  return (
+    <div ref={containerRef} className="story-panel">
+      <div className="story-panel__inner">
+        <section className="story-cover sys-chapter">
+          <div className="story-cover__center">
+            <motion.p
+              className="story-cover__city"
+              initial={{ opacity: 0, y: 14 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.55, ease: heroEase }}
+            >
+              Hyderabad
+            </motion.p>
+
+            <h1 className="story-cover__hero" aria-label="Your city. Your voice.">
+              <motion.span
+                className="story-cover__hero-line"
+                initial={{ opacity: 0, y: 28 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.7, delay: 0.12, ease: heroEase }}
+              >
+                Your city.
+              </motion.span>
+              <motion.span
+                className="story-cover__hero-line story-cover__hero-line--voice"
+                initial={{ opacity: 0, y: 28 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.7, delay: 0.24, ease: heroEase }}
+              >
+                Your voice.
+              </motion.span>
             </h1>
 
-            <p className="max-w-2xl text-xl font-light leading-relaxed text-slate-400 md:text-2xl">
-              Nagar Rakshak is a transparent, real-time command center for urban accountability. We turn citizen complaints into tracked, public data that the system can no longer ignore.
-            </p>
-          </motion.div>
-        </div>
-
-        {/* SECTION 1: THE CRISIS */}
-        <div className="sys-chapter relative">
-          <div className="sticky top-24 z-10 bg-lp-background/90 backdrop-blur pb-8 border-b border-lp-border mb-16">
-            <h2 className="text-4xl font-black font-sans text-white tracking-widest uppercase">
-              <span className="text-lp-red">01 //</span> THE CRISIS
-            </h2>
-          </div>
-
-          <div className="space-y-48">
-            {/* Case 1: Flooding */}
-            <motion.div 
-              initial={{ opacity: 0, x: -20 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: false, margin: "-20%" }}
-              className="relative"
+            <motion.p
+              className="story-cover__tag"
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.4, ease: heroEase }}
             >
-              <div className="absolute -left-12 top-0 h-full w-px bg-lp-border">
-                <div className="w-full h-1/3 mt-12 w-full bg-lp-red shadow-glow-red" />
-              </div>
-              <p className="font-mono text-xs text-lp-red mb-4 tracking-widest uppercase">Tolichowki, Hyderabad</p>
-              <h3 className="text-3xl text-white font-bold mb-4">The Silence of the Sewers</h3>
-              <p className="text-gray-400 text-lg mb-8 max-w-md leading-relaxed">
-                When the rains hit, the drains fail. Citizens report flooding every monsoon, but the tickets stay "pending" for months. In Tolichowki, infrastructure neglect isn't just an inconvenience—it's a recurring crisis.
-              </p>
-              
-              <div className="landing-image-frame group relative w-fit p-2">
-                <div className="absolute top-0 left-0 w-2 h-2 border-t-2 border-l-2 border-lp-red" />
-                <div className="absolute bottom-0 right-0 w-2 h-2 border-b-2 border-r-2 border-lp-red" />
-                <img src="/images/flooded_street.png" alt="Flooded Street" className="h-[300px] w-full max-w-[500px] object-cover saturate-[0.85] transition-all duration-700 group-hover:saturate-100 md:w-[500px]" />
-                <div className="absolute bottom-4 left-4 font-mono text-[9px] bg-lp-background/80 px-2 py-1 text-lp-red">REPORT FILED: 180 DAYS AGO</div>
-              </div>
-            </motion.div>
+              Complaints on the map. Fixes on the record.
+            </motion.p>
 
-            {/* Case 2: Potholes */}
-            <motion.div 
-              initial={{ opacity: 0, x: -20 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: false, margin: "-20%" }}
-              className="relative"
+            <motion.button
+              type="button"
+              className="story-cover__scroll"
+              onClick={scrollToContent}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.5, delay: 0.65, ease: heroEase }}
+              aria-label="Scroll to content"
             >
-              <div className="absolute -left-12 top-0 h-full w-px bg-lp-border">
-                <div className="mt-12 h-1/3 w-full bg-lp-amber shadow-glow-amber" />
-              </div>
-              <p className="font-mono text-xs text-lp-amber mb-4 tracking-widest uppercase">Miyapur, Hyderabad</p>
-              <h3 className="text-3xl text-white font-bold mb-4">The Pothole Epidemic</h3>
-              <p className="text-gray-400 text-lg mb-8 max-w-md leading-relaxed">
-                Every commute is a gamble. Pothole density on main arterial roads has reached critical levels, leading to accidents and vehicle damage. Contractors get paid, but the roads remain broken.
-              </p>
-              
-              <div className="landing-image-frame group relative w-fit p-2">
-                <div className="absolute left-0 top-0 h-2 w-2 border-l-2 border-t-2 border-lp-amber" />
-                <div className="absolute bottom-0 right-0 h-2 w-2 border-b-2 border-r-2 border-lp-amber" />
-                <img src="/images/pothole_road.png" alt="Pothole Road" className="h-[300px] w-full max-w-[500px] object-cover saturate-[0.85] transition-all duration-700 group-hover:saturate-100 md:w-[500px]" />
-                <div className="absolute bottom-4 left-4 font-mono text-[9px] bg-lp-background/80 px-2 py-1 text-lp-amber">STATUS: NEEDS URGENT REPAIR</div>
-              </div>
-            </motion.div>
-
-            {/* Case 3: Streetlights */}
-            <motion.div 
-              initial={{ opacity: 0, x: -20 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: false, margin: "-20%" }}
-              className="relative"
-            >
-              <div className="absolute -left-12 top-0 h-full w-px bg-lp-border" />
-              <p className="font-mono text-xs text-gray-500 mb-4 tracking-widest uppercase">Secunderabad, Hyderabad</p>
-              <h3 className="text-3xl text-white font-bold mb-4">Streets in the Dark</h3>
-              <p className="text-gray-400 text-lg mb-8 max-w-md leading-relaxed">
-                Broken streetlights make entire neighborhoods feel unsafe after sunset. Despite multiple complaints, legacy systems fail to track the repair status, leaving women and the elderly in the dark.
-              </p>
-              
-              <div className="landing-image-frame group relative w-fit p-2">
-                <div className="absolute left-0 top-0 h-2 w-2 border-l-2 border-t-2 border-slate-500" />
-                <div className="absolute bottom-0 right-0 h-2 w-2 border-b-2 border-r-2 border-slate-500" />
-                <img src="/images/broken_streetlights.png" alt="Broken Streetlights" className="h-[300px] w-full max-w-[500px] object-cover saturate-[0.85] transition-all duration-700 group-hover:saturate-100 md:w-[500px]" />
-                <div className="absolute bottom-4 left-4 font-mono text-[9px] bg-lp-background/80 px-2 py-1 text-gray-400">STATUS: NO ACTIVE REPAIR TICKET</div>
-              </div>
-            </motion.div>
+              <ChevronDown className="story-cover__scroll-icon" strokeWidth={1.75} aria-hidden />
+              <span className="story-cover__scroll-label">Scroll</span>
+            </motion.button>
           </div>
-        </div>
+        </section>
 
-        {/* SECTION 2: THE PROCESS */}
-        <div className="sys-chapter relative">
-          <div className="sticky top-24 z-10 bg-lp-background/90 backdrop-blur pb-8 border-b border-lp-border mb-16">
-            <h2 className="text-4xl font-black font-sans text-white tracking-widest uppercase">
-              <span className="text-lp-cyan">02 //</span> HOW IT WORKS
-            </h2>
-          </div>
+        <section id="on-the-ground" className="story-scroll sys-chapter">
+          <h2 className="story-scroll__heading">On the ground</h2>
+          <p className="story-scroll__lede">
+            Live zones on the map. Real reports from Hyderabad neighbourhoods.
+          </p>
 
-          <div className="space-y-24">
-            <div className="grid grid-cols-1 gap-12">
-              {[
-                { step: "01", title: "Instant Reporting", desc: "Citizens take a photo and drop a pin. Our system captures precise location and time data to prevent bureaucratic denial." },
-                { step: "02", title: "Smart Routing", desc: "AI automatically routes the issue to the exact zonal officer in charge. No manual sorting, no 'wrong department' excuses." },
-                { step: "03", title: "Public Tracking", desc: "Every step of the repair is public. If a deadline is missed, the system escalates it automatically, visible for everyone to see." }
-              ].map((item) => (
-                <div key={item.step} className="flex space-x-8 items-start group">
-                  <div className="landing-display text-6xl font-black text-lp-cyan/25 transition-colors group-hover:text-lp-cyan/50">{item.step}</div>
-                  <div>
-                    <h4 className="text-xl font-bold text-white mb-2">{item.title}</h4>
-                    <p className="text-gray-400 leading-relaxed max-w-sm">{item.desc}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* SECTION 3: URBAN IMPACT (SDG) */}
-        <div className="sys-chapter relative">
-          <div className="sticky top-24 z-10 bg-lp-background/90 backdrop-blur pb-8 border-b border-lp-border mb-16">
-            <h2 className="text-4xl font-black font-sans text-white tracking-widest uppercase">
-              <span className="text-lp-green">03 //</span> GLOBAL GOALS
-            </h2>
-          </div>
-
-          <div className="space-y-8">
-            <p className="text-gray-400 text-lg max-w-lg mb-12 leading-relaxed">
-              We're not just fixing roads; we're building a sustainable future. Every report resolved on Nagar Rakshak is mapped directly to United Nations Sustainable Development Goals.
-            </p>
-
-            <div className="grid grid-cols-1 gap-4">
-              {[
-                { protocol: "SDG-06", title: "Clean Water", color: "text-blue-400", desc: "Fixing drainage and leaks preserves our water table." },
-                { protocol: "SDG-11", title: "Sustainable Cities", color: "text-amber-400", desc: "Making infrastructure safe and accessible for all citizens." },
-                { protocol: "SDG-16", title: "Strong Institutions", color: "text-cyan-400", desc: "Eliminating corruption through radical data transparency." }
-              ].map((sdg) => (
-                <div key={sdg.protocol} className="border border-lp-border bg-lp-surface/30 p-6 relative group flex items-center justify-between">
-                  <div>
-                    <span className={`font-mono font-black text-xl ${sdg.color} mr-4`}>[{sdg.protocol}]</span>
-                    <span className="font-bold text-white uppercase text-sm tracking-widest">{sdg.title}</span>
-                  </div>
-                  <p className="text-xs text-gray-500 max-w-xs text-right">{sdg.desc}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* SECTION 4: REAL IMPACT (STATS) */}
-        <div className="sys-chapter relative">
-          <div className="sticky top-24 z-10 bg-lp-background/90 backdrop-blur pb-8 border-b border-lp-border mb-16">
-            <h2 className="text-4xl font-black font-sans text-white tracking-widest uppercase">
-              <span className="text-lp-cyan">04 //</span> BY THE NUMBERS
-            </h2>
-          </div>
-
-          <div className="grid grid-cols-2 gap-8">
-            {[
-              { label: "Issues Tracked", value: "12,400+" },
-              { label: "Successfully Resolved", value: "8,200+" },
-              { label: "Resolution Rate", value: "72%" },
-              { label: "Localities Covered", value: "14" }
-            ].map((stat) => (
-              <div key={stat.label} className="p-8 border border-lp-border bg-lp-surface/20">
-                <div className="text-4xl font-black text-white mb-2">{stat.value}</div>
-                <div className="text-[10px] text-gray-500 uppercase tracking-widest font-mono">{stat.label}</div>
-              </div>
+          <div className="story-cases">
+            {CASES.map((item) => (
+              <article key={item.place} className="story-case">
+                <p className="story-case__place">{item.place}</p>
+                <h3 className="story-case__title">{item.title}</h3>
+                <p className="story-case__body">{item.body}</p>
+                <figure className="story-case__figure">
+                  <img src={item.image} alt={item.alt} loading="lazy" />
+                  <figcaption>{item.note}</figcaption>
+                </figure>
+              </article>
             ))}
           </div>
-        </div>
+        </section>
 
-        {/* SECTION 5: FOOTER */}
-        <div className="sys-chapter relative pb-32">
-          <div className="h-px bg-lp-border mb-32" />
-          <h3 className="text-4xl font-black text-white mb-8">Ready to make your city accountable?</h3>
-          <p className="text-gray-400 max-w-lg mb-12 leading-relaxed">
-            Nagar Rakshak is currently active in 14 localities across Hyderabad. Join thousands of citizens who are reclaiming their streets through data.
-          </p>
-          <div className="font-mono text-[10px] text-gray-600 flex justify-between uppercase tracking-[0.2em]">
-            <span>© 2024 Nagar Rakshak Hyderabad</span>
-            <span>Secured Connection // All access logged</span>
+        <section className="story-scroll sys-chapter">
+          <h2 className="story-scroll__heading">Who uses it</h2>
+          <div className="story-scroll__prose">
+            <p>
+              <strong>Residents</strong> file from their phone—photo, pin, short note.
+            </p>
+            <p>
+              <strong>Ward officers</strong> receive tickets for their area and update status.
+            </p>
+            <p>
+              <strong>City heads</strong> see which wards fall behind on the same map you see here.
+            </p>
           </div>
-        </div>
+        </section>
 
+        <section className="story-scroll sys-chapter">
+          <h2 className="story-scroll__heading">UN Sustainable Development Goals</h2>
+          <p className="story-scroll__lede">
+            Resolved issues on Nagar Rakshak align with global targets—city infrastructure work maps
+            to outcomes citizens can recognise.
+          </p>
+
+          <ul className="story-sdg">
+            {SDG_GOALS.map((sdg) => (
+              <li key={sdg.code} className={`story-sdg__card story-sdg__card--${sdg.variant}`}>
+                <span className="story-sdg__code">{sdg.code}</span>
+                <div className="story-sdg__body">
+                  <span className="story-sdg__title">{sdg.title}</span>
+                  <p className="story-sdg__desc">{sdg.desc}</p>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </section>
+
+        <footer className="story-scroll story-scroll--end sys-chapter">
+          <p className="story-end__copy">Nagar Rakshak · Hyderabad</p>
+        </footer>
       </div>
     </div>
   );

@@ -6,6 +6,7 @@ import { createNotification } from '../../contexts/NotificationContext';
 import DeptTag from '../shared/DeptTag';
 import SeverityBadge from '../shared/SeverityBadge';
 import StatusBadge from '../shared/StatusBadge';
+import SafetySensitiveBadge from '../shared/SafetySensitiveBadge';
 import ComplaintTiming from '../shared/ComplaintTiming';
 import ClosureVerify from './ClosureVerify';
 import LoadingSpinner from '../shared/LoadingSpinner';
@@ -182,6 +183,7 @@ function ComplaintMeta({ complaint, assignee }) {
               <DeptTag dept={complaint.dept} />
               <StatusBadge status={complaint.status} size="sm" />
               <SeverityBadge severity={complaint.severity} size="sm" showLabel={false} />
+              {complaint.safety_sensitive ? <SafetySensitiveBadge /> : null}
             </div>
             {complaint.division && (
               <p className="mt-2 text-sm text-text-secondary">

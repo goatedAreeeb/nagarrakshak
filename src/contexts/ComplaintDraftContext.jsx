@@ -5,6 +5,8 @@ const STORAGE_KEY = 'nagarrakshak_complaint_draft_v1';
 const EMPTY_DRAFT = {
   step: 0,
   imageBase64: null,
+  reportWithoutPhoto: false,
+  safetySensitive: false,
   lat: null,
   lng: null,
   address: '',
@@ -61,7 +63,24 @@ export function ComplaintDraftProvider({ children }) {
   }, []);
 
   const setStep = useCallback((step) => setDraft((d) => ({ ...d, step })), [setDraft]);
-  const setImageBase64 = useCallback((imageBase64) => setDraft((d) => ({ ...d, imageBase64 })), [setDraft]);
+  const setImageBase64 = useCallback(
+    (imageBase64) =>
+      setDraft((d) => ({
+        ...d,
+        imageBase64,
+        reportWithoutPhoto: imageBase64 ? false : d.reportWithoutPhoto,
+      })),
+    [setDraft]
+  );
+  const setReportWithoutPhoto = useCallback(
+    (reportWithoutPhoto) =>
+      setDraft((d) => ({
+        ...d,
+        reportWithoutPhoto,
+        imageBase64: reportWithoutPhoto ? null : d.imageBase64,
+      })),
+    [setDraft]
+  );
   const setLat = useCallback((lat) => setDraft((d) => ({ ...d, lat })), [setDraft]);
   const setLng = useCallback((lng) => setDraft((d) => ({ ...d, lng })), [setDraft]);
   const setAddress = useCallback((address) => setDraft((d) => ({ ...d, address })), [setDraft]);
@@ -88,6 +107,11 @@ export function ComplaintDraftProvider({ children }) {
     [setDraft]
   );
 
+  const setSafetySensitive = useCallback(
+    (safetySensitive) => setDraft((d) => ({ ...d, safetySensitive: Boolean(safetySensitive) })),
+    [setDraft]
+  );
+
   const value = useMemo(
     () => ({
       draft,
@@ -95,6 +119,8 @@ export function ComplaintDraftProvider({ children }) {
       resetDraft,
       setStep,
       setImageBase64,
+      setReportWithoutPhoto,
+      setSafetySensitive,
       setLat,
       setLng,
       setAddress,
@@ -113,6 +139,8 @@ export function ComplaintDraftProvider({ children }) {
       resetDraft,
       setStep,
       setImageBase64,
+      setReportWithoutPhoto,
+      setSafetySensitive,
       setLat,
       setLng,
       setAddress,

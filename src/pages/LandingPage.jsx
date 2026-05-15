@@ -22,44 +22,41 @@ export default function LandingPage() {
   }
 
   return (
-    <div className="landing-shell grid h-screen min-h-0 w-full grid-cols-1 overflow-hidden lg:grid-cols-[minmax(0,1.05fr)_minmax(380px,0.95fr)]">
-      <div className="landing-story-panel relative z-10 min-h-0 min-w-0 overflow-hidden">
+    <div className="landing-shell flex h-screen w-full overflow-hidden text-gray-300">
+      <div className="relative z-10 h-full w-[55%] min-w-0">
         <StoryPanel onSectionChange={setActiveSection} />
       </div>
 
-      <div className="landing-map-panel relative z-0 hidden min-h-0 min-w-0 lg:block">
+      <div className="relative z-0 hidden h-full w-[45%] min-w-0 lg:block">
         <LandingMapPanel activeSection={activeSection} />
       </div>
 
-      <header className="landing-glass-header pointer-events-none fixed inset-x-0 top-0 z-50 flex h-20 items-center justify-between px-6 md:h-24 md:px-12">
-        <Link to="/" className="pointer-events-auto group flex items-center gap-4">
-          <div className="flex h-11 w-11 items-center justify-center overflow-hidden rounded-lg border border-white/10 bg-lp-surface/80 shadow-lg ring-1 ring-cyan-500/20 backdrop-blur-md md:h-12 md:w-12">
+      <header className="pointer-events-none fixed inset-x-0 top-0 z-40 flex h-24 items-center justify-between bg-gradient-to-b from-background via-background/90 to-transparent px-6 md:px-12">
+        <Link to="/" className="pointer-events-auto group flex items-center gap-5">
+          <div className="relative flex h-12 w-12 items-center justify-center overflow-hidden rounded border border-white/5 bg-surface shadow-2xl">
             <img
               src="/images/logo.png"
               alt="Nagar Rakshak"
-              className="h-9 w-9 object-contain opacity-90 transition-opacity group-hover:opacity-100"
+              className="h-10 w-10 object-contain opacity-80 transition-opacity group-hover:opacity-100"
             />
           </div>
           <div>
-            <p className="landing-display text-lg font-bold uppercase tracking-[0.18em] text-white md:text-xl">
+            <h1 className="text-xl font-black uppercase tracking-[0.2em] text-white/90 transition-colors group-hover:text-white md:text-2xl">
               Nagar Rakshak
-            </p>
-            <p className="landing-mono mt-0.5 text-[9px] uppercase tracking-[0.35em] text-slate-400">
-              Hyderabad Civic Command
-            </p>
+            </h1>
+            <div className="flex items-center gap-2">
+              <div className="h-px w-6 bg-white/20" />
+              <p className="font-mono text-[9px] uppercase tracking-[0.4em] text-gray-500">
+                Hyderabad Civic Command
+              </p>
+            </div>
           </div>
         </Link>
 
-        <div className="pointer-events-auto flex items-center gap-2 md:gap-3">
-          <Link
-            to="/signup"
-            className="landing-mono border border-white/25 bg-white/5 px-4 py-2.5 text-[10px] font-semibold uppercase tracking-widest text-slate-200 backdrop-blur-md transition-all hover:border-white/50 hover:bg-white/10 md:px-5 md:py-3"
-          >
-            Register
-          </Link>
+        <div className="pointer-events-auto flex items-center gap-3">
           <Link
             to="/login"
-            className="landing-mono border border-white bg-white px-5 py-2.5 text-[10px] font-bold uppercase tracking-widest text-black shadow-[0_0_32px_rgba(255,255,255,0.15)] transition-all hover:bg-slate-100 md:px-6 md:py-3"
+            className="border border-white bg-white px-6 py-3 text-[10px] font-bold uppercase tracking-widest text-black shadow-[0_0_30px_rgba(255,255,255,0.1)] transition-all hover:bg-gray-200"
           >
             Sign In
           </Link>

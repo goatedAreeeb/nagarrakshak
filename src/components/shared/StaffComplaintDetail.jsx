@@ -6,6 +6,7 @@ import ComplaintLocationMap from './ComplaintLocationMap';
 import DeptTag from './DeptTag';
 import StatusBadge from './StatusBadge';
 import SeverityBadge from './SeverityBadge';
+import SafetySensitiveBadge from './SafetySensitiveBadge';
 import ComplaintTiming from './ComplaintTiming';
 import LoadingSpinner from './LoadingSpinner';
 import { formatComplaintId, formatDate } from '../../lib/utils';
@@ -86,6 +87,7 @@ export default function StaffComplaintDetail({ complaint: initial, onClose }) {
                 <DeptTag dept={complaint.dept} />
                 <StatusBadge status={complaint.status} />
                 <SeverityBadge severity={complaint.severity} size="sm" />
+                {complaint.safety_sensitive ? <SafetySensitiveBadge /> : null}
               </div>
 
               <p className="text-[15px] leading-relaxed text-text-primary">

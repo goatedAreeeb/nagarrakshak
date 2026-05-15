@@ -1,6 +1,6 @@
 -- NagarRakshak Hyderabad — Seed Data
 -- Run schema.sql first. Create auth users via Supabase Dashboard or Auth API with emails below.
--- Password for all demo accounts: Demo@1234 (admin: Admin@1234)
+-- Password for all demo accounts: run scripts/seed-demo-users.mjs (default: demo123)
 
 -- WARDS
 INSERT INTO wards (id, name, lat, lng, population, zone, open_issues, resolved_issues, health_score, dominant_category) VALUES
@@ -26,8 +26,8 @@ INSERT INTO wards (id, name, lat, lng, population, zone, open_issues, resolved_i
 -- admin:    a0000010-0000-4000-8000-000000000010
 
 INSERT INTO users (id, email, name, role, ward_id, dept, zone, credits, trust_score) VALUES
-('a0000001-0000-4000-8000-000000000001', 'citizen1@demo.com', 'Rajesh Kumar', 'citizen', 1, NULL, NULL, 120, 1.0),
-('a0000002-0000-4000-8000-000000000002', 'citizen2@demo.com', 'Priya Sharma', 'citizen', 3, NULL, NULL, 80, 1.0),
+('a0000001-0000-4000-8000-000000000001', 'citizen1@demo.com', 'Harshit Divekar', 'citizen', 1, NULL, NULL, 360, 1.0),
+('a0000002-0000-4000-8000-000000000002', 'citizen2@demo.com', 'Priya Sharma', 'citizen', 3, NULL, NULL, 195, 1.0),
 ('a0000003-0000-4000-8000-000000000003', 'worker1@demo.com', 'Suresh Reddy', 'worker', NULL, 'Roads', NULL, 0, 1.0),
 ('a0000004-0000-4000-8000-000000000004', 'worker2@demo.com', 'Lakshmi Devi', 'worker', NULL, 'Sanitation', NULL, 0, 1.0),
 ('a0000005-0000-4000-8000-000000000005', 'officer1@demo.com', 'Venkat Rao', 'officer', NULL, 'Roads', NULL, 0, 1.0),

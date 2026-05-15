@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
-import { Home, Map, Rss, FilePlus, Megaphone } from 'lucide-react';
+import { Home, Map, Rss, FilePlus, Megaphone, Trophy } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import Sidebar from './Sidebar';
 import Navbar from './Navbar';
@@ -16,19 +16,26 @@ function hasMinRole(role, minRole) {
   return roleIdx >= minIdx;
 }
 
-const MOBILE_NAV = [
-  { to: '/dashboard', icon: Home, label: 'Home' },
-  { to: '/billboard', icon: Megaphone, label: 'Bulletin' },
-  { to: '/map', icon: Map, label: 'Map' },
-  { to: '/feed', icon: Rss, label: 'Feed' },
-];
+function mobileNavForRole(role) {
+  const items = [
+    { to: '/dashboard', icon: Home, label: 'Home' },
+    { to: '/map', icon: Map, label: 'Map' },
+    { to: '/feed', icon: Rss, label: 'Feed' },
+    { to: '/billboard', icon: Megaphone, label: 'Bulletin' },
+  ];
+  if (role === 'citizen') {
+    items.push({ to: '/leadership', icon: Trophy, label: 'Leadership' });
+    items.push({ to: '/report', icon: FilePlus, label: 'Post' });
+  }
+  return items;
+}
 
 export default function AppShell({ children, title = 'Dashboard', breadcrumb = [] }) {
   const [panelOpen, setPanelOpen] = useState(false);
   const { role } = useAuth();
   const location = useLocation();
 
-  const mobileItems = MOBILE_NAV.filter(
+  const mobileItems = mobileNavForRole(role).filter(
     (item) => !item.minRole || hasMinRole(role, item.minRole)
   );
 

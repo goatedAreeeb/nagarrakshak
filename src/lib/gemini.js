@@ -33,10 +33,17 @@ const DEPT_MAP = {
   Other: 'Other',
 };
 
-const SLA_BY_SEVERITY = [336, 168, 48, 12, 2];
+export const SLA_BY_SEVERITY = [336, 168, 48, 12, 2];
 const URGENCY_BY_SEVERITY = ['Low', 'Moderate', 'High', 'Urgent', 'Immediate'];
 
 const KEYWORD_RULES = [
+  {
+    pattern:
+      /\b(stalking|followed\s+me|being\s+followed|eve\s*teas|molest|groped|indecent\s+exposure)\b/i,
+    dept: 'Women Safety',
+    division: 'Safety Cell',
+    severity: 5,
+  },
   {
     pattern:
       /\b(dead\s+(dog|animal|cat|body|pet)|dog\s+(dead|body|carcass)|animal\s+(dead|body|carcass)|dead\s+body|carcass|corpse|deceased|rotting\s+(dog|animal|body)|killed\s+(dog|animal))\b/i,
@@ -127,15 +134,26 @@ function buildResult({ dept, division, severity, ai_reasoning, location_risk = f
 }
 
 /** Text used for keyword + local classification (description + optional context). */
-export function buildClassificationContext({ description, hasVoice = false, hasImage = false } = {}) {
-  const parts = [(description || '').trim()];
+export function buildClassificationContext({
+  description,
+  hasVoice = false,
+  hasImage = false,
+  safetySensitive = false,
+} = {}) {
+  const parts = [];
+  if (safetySensitive) {
+    parts.push(
+      'Citizen flagged a personal-safety concern: harassment, stalking, feeling unsafe in public transit or streets, poorly lit areas at night, or fear of escalation. Not a substitute for emergency services.'
+    );
+  }
+  parts.push((description || '').trim());
   if (hasVoice) {
     parts.push('Citizen attached a voice note describing the issue.');
   }
   if (hasImage && (description || '').trim().length < 40) {
     parts.push('Photo evidence was uploaded with the report.');
   }
-  return parts.filter(Boolean).join(' ');
+  return parts.filter(Boolean).join(' \n');
 }
 
 function normalizeDeptLabel(raw) {
@@ -160,10 +178,13 @@ function normalizeDeptLabel(raw) {
   return DEPT_MAP[raw] || raw || 'Other';
 }
 
-export function classifyComplaintLocally(description, { hasVoice = false, hasImage = false } = {}) {
-  const text = buildClassificationContext({ description, hasVoice, hasImage });
+export function classifyComplaintLocally(
+  description,
+  { hasVoice = false, hasImage = false, safetySensitive = false } = {}
+) {
+  const text = buildClassificationContext({ description, hasVoice, hasImage, safetySensitive });
 
-  if (!text) {
+  if (!text.trim()) {
     return buildResult({
       dept: hasImage || hasVoice ? 'Stray Animals' : 'Other',
       division: hasImage || hasVoice ? 'General Inspection' : 'General',
@@ -176,13 +197,26 @@ export function classifyComplaintLocally(description, { hasVoice = false, hasIma
 
   for (const rule of KEYWORD_RULES) {
     if (rule.pattern.test(text)) {
+      let severity = rule.severity;
+      if (safetySensitive) severity = Math.max(4, severity);
       return buildResult({
         dept: rule.dept,
         division: rule.division,
-        severity: rule.severity,
-        ai_reasoning: `Matched keywords for ${rule.dept} based on your report.`,
+        severity,
+        ai_reasoning: safetySensitive
+          ? `Safety-sensitive report — routed to ${rule.dept} with priority.`
+          : `Matched keywords for ${rule.dept} based on your report.`,
       });
     }
+  }
+
+  if (safetySensitive) {
+    return buildResult({
+      dept: 'Women Safety',
+      division: 'Safety Cell',
+      severity: 4,
+      ai_reasoning: 'Safety-sensitive report — routed for priority officer review.',
+    });
   }
 
   if (hasImage && /\b(dog|animal|pet|stray)\b/i.test(text)) {
@@ -262,10 +296,18 @@ export async function analyzeComplaint({
   lat,
   lng,
   hasVoice = false,
+  safetySensitive = false,
 }) {
+  const contextText = buildClassificationContext({
+    description,
+    hasVoice,
+    hasImage: Boolean(imageBase64),
+    safetySensitive,
+  });
   const local = classifyComplaintLocally(description, {
     hasVoice,
     hasImage: Boolean(imageBase64),
+    safetySensitive,
   });
   const apiKey = import.meta.env.VITE_GEMINI_KEY;
 
@@ -275,7 +317,7 @@ export async function analyzeComplaint({
 
   const parts = [
     {
-      text: `${SYSTEM_PROMPT}\n\nCitizen report: ${description || 'No description'}\nHas photo: ${Boolean(imageBase64)}\nHas voice note: ${hasVoice}\nLocation: ${lat}, ${lng} (Hyderabad)\n\nIf the report involves a dead animal, dog carcass, or stray animal hazard, classify as Stray Animals.`,
+      text: `${SYSTEM_PROMPT}\n\nCitizen report: ${contextText || 'No description'}\nHas photo: ${Boolean(imageBase64)}\nHas voice note: ${hasVoice}\nSafety-sensitive flow: ${safetySensitive}\nLocation: ${lat}, ${lng} (Hyderabad)\n\nIf safety-sensitive is true, prioritise Women Safety, Traffic Police, Street Lighting, or Fire & Safety as appropriate. If the report involves a dead animal, dog carcass, or stray animal hazard, classify as Stray Animals.`,
     },
   ];
 

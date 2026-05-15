@@ -10,6 +10,7 @@ import {
   TrendingUp,
   Award,
   RefreshCw,
+  Shield,
 } from 'lucide-react';
 import {
   AreaChart,
@@ -147,10 +148,16 @@ export default function CitizenDashboard() {
             {wardName} · {citizenLevel(profile?.credits || 0)}
           </p>
         </div>
-        <Link to="/report" className="btn-primary shrink-0">
-          <Plus className="h-4 w-4" />
-          Post issue
-        </Link>
+        <div className="flex flex-col items-stretch sm:items-end gap-2 shrink-0">
+          <Link to="/report?safety=1" className="btn-secondary inline-flex items-center justify-center gap-2">
+            <Shield className="h-4 w-4" />
+            Safety concern
+          </Link>
+          <Link to="/report" className="btn-primary inline-flex items-center justify-center gap-2">
+            <Plus className="h-4 w-4" />
+            Post issue
+          </Link>
+        </div>
       </header>
 
       <section className="grid grid-cols-2 lg:grid-cols-4 gap-3">
