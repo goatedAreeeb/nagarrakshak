@@ -140,8 +140,12 @@ const GEOGRAPHIC_UNITS_SEED = [
     state: 'Telangana',
     population: null,
     population_census_year: null,
+    // A real, well-known city-center point (not a fabricated boundary) — good enough for
+    // resolve-geography's GPS-nearest-centroid matching in a demo; a real Lok Sabha PC
+    // boundary polygon should replace this before any non-demo use.
+    boundary_geojson: { type: 'Point', coordinates: [78.4867, 17.385] },
     boundary_crosswalk_note:
-      'Demo seed row only — real LGD/PC codes not verified in this pass. Replace before any non-demo use.',
+      'Demo seed row only — real LGD/PC codes not verified in this pass; boundary_geojson is a city-center point, not a real constituency polygon. Replace before any non-demo use.',
   },
 ];
 

@@ -6,3 +6,4 @@ dist
 *.log
 civic-issue-map/
 .landing-temp/
+supabase/.temp/

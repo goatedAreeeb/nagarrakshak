@@ -53,6 +53,51 @@ The Supabase CLI could not `link` (needs a separate personal access token we don
 
 **Still not deployed:** the 4 Edge Functions (`ingest-submission`, `extract-features`, `cluster-submissions`, `resolve-geography`) — deploying requires `supabase functions deploy`, which needs the Supabase CLI `link`ed with a personal access token (Settings → Access Tokens on the Supabase dashboard, or `supabase login`), which we don't have yet. Schema/RLS are now live and verified; the AI pipeline itself is still unexecuted.
 
+## Phases 3-6 EXECUTED LIVE 2026-07-05
+
+Supabase CLI linked with a personal access token (`SUPABASE_ACCESS_TOKEN` in `.env`,
+never committed). All 4 Edge Functions deployed for real:
+`ingest-submission`, `extract-features`, `cluster-submissions`, `resolve-geography`.
+`GEMINI_API_KEY` set as an Edge Function secret (`supabase secrets set`) — confirmed
+via `supabase secrets list` that Supabase also auto-provisions `SUPABASE_URL`/
+`SUPABASE_ANON_KEY`/`SUPABASE_SERVICE_ROLE_KEY` to every function, no manual setup needed.
+
+**Full pipeline verified end-to-end live** (`scripts/verify-e2e-pipeline.mjs`): a real
+citizen login calls `ingest-submission` → row lands in `citizen_submissions` →
+`extract-features` fires asynchronously → `resolve-geography` chains after it →
+final row shows `category: 'school_infrastructure'`, `geographic_unit_id` correctly
+set to the seeded Hyderabad constituency. Confirmed via direct DB query (the
+verify script's own poll loop raced the async chain and exited early — a script
+timing bug, not a pipeline bug).
+
+**Real finding, not a bug:** the given `GEMINI_API_KEY` is a valid key but returns
+`429 RESOURCE_EXHAUSTED` (quota limit 0 — billing not enabled on that Google Cloud
+project), confirmed by hitting the Gemini REST endpoint directly. `extract-features`
+correctly fell back to its deterministic keyword extractor when the LLM call failed
+(confidence 0.4, matching the fallback's own value) — this is the fail-closed
+guardrail working exactly as designed, not silently crashing or fabricating a
+result. To see the actual LLM-based extraction (not just the fallback), enable
+billing on the Gemini API key's Google Cloud project, or supply a different key
+with available quota.
+
+Closed the Phase 6 gap flagged below: `geographic_units`'s single demo row had no
+`boundary_geojson`, so GPS matching had nothing to compare against. Added a real
+(if approximate) Hyderabad city-center point (`{type: 'Point', coordinates:
+[78.4867, 17.385]}`) — both in the live row (direct UPDATE) and in
+`seed-demo-users.mjs` for future fresh projects. Clearly labeled as a city-center
+point standing in for a real constituency boundary polygon, not a fabricated
+precise boundary.
+
+**Constituency decision:** kept Hyderabad rather than switching to a different
+real Lok Sabha constituency, per explicit instruction to avoid risking new
+errors this late — the whole pipeline is now proven against it live.
+
+**Still open:** LGD/PC/AC numeric codes are still placeholders (need a manual
+lgdirectory.gov.in lookup, not a credential issue). Frontend map data-source
+swap (Phase 6, 25-file subsystem) still not started. The Gemini quota issue
+above means AI extraction quality can't be evaluated yet, only the
+infrastructure and fallback path.
+
 ## Phase 3+4 Note (Intake + Feature Extraction, merged)
 
 Built together rather than sequentially: in this codebase the "Review" step of the
