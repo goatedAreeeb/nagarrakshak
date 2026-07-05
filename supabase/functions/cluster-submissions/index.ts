@@ -16,7 +16,8 @@ import { corsHeaders, handleCors } from '../_shared/cors.ts';
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY');
-const EMBED_MODEL_VERSION = 'text-embedding-004';
+const EMBED_MODEL_VERSION = 'gemini-embedding-001';
+const EMBED_DIMENSIONS = 768; // matches migration 0011's VECTOR(768); gemini-embedding-001 defaults to 3072-dim but supports MRL truncation via outputDimensionality
 const SIMILARITY_THRESHOLD = 0.83; // cosine similarity — tune against real data before relying on it
 
 const supabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
@@ -69,6 +70,7 @@ async function embedText(text: string): Promise<number[] | null> {
         body: JSON.stringify({
           model: `models/${EMBED_MODEL_VERSION}`,
           content: { parts: [{ text }] },
+          outputDimensionality: EMBED_DIMENSIONS,
         }),
       }
     );

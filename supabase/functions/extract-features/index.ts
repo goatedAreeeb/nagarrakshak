@@ -86,7 +86,7 @@ async function callGemini(text: string, language: string | null) {
 
   try {
     const res = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -98,7 +98,11 @@ async function callGemini(text: string, language: string | null) {
               parts: [{ text: `${SYSTEM_PROMPT}\n\nLanguage: ${language ?? 'unknown'}\nSubmission text:\n${text}` }],
             },
           ],
-          generationConfig: { temperature: 0.1, maxOutputTokens: 400 },
+          // thinkingBudget: 0 disables gemini-2.5-flash's default "thinking" tokens, which
+          // otherwise eat into maxOutputTokens and can truncate the JSON before it closes
+          // (observed live: finishReason MAX_TOKENS with ~380 thoughtsTokenCount consumed
+          // before any visible output). Not needed for a deterministic-schema extraction task.
+          generationConfig: { temperature: 0.1, maxOutputTokens: 800, thinkingConfig: { thinkingBudget: 0 } },
         }),
       }
     );
