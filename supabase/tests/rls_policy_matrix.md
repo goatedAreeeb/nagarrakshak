@@ -1,6 +1,6 @@
 # RLS Policy Test Matrix — v2 tables (Migration 0009)
 
-**Status: NOT YET EXECUTED.** No live Supabase project is connected to this repo (see `BASELINE.md`). This matrix defines the expected pass/fail per role × table × operation so that whoever provisions the first real project can run it as an acceptance check for CP-2 and CP-10, rather than trusting the policies by inspection alone.
+**Status: the single most important row executed for real on 2026-07-05** against the live project (`scripts/verify-rls.mjs`). Confirmed: `citizen` and `analyst` both get `42501` RLS rejections on `human_overrides` INSERT; `mp_staff` passes RLS (fails only on an unrelated FK check against a dummy id). Citizen self-insert into `citizen_submissions` + anon no-read also confirmed (`scripts/verify-submission-insert.mjs`). The full per-cell matrix below is still only inspection-based for every row not called out above — treat those as expected behavior per the policy SQL, not yet individually re-verified.
 
 How to run: create one test user per `role_v2` value, sign in as each via `supabase-js` with the anon key, then attempt each operation below and confirm the row matches.
 

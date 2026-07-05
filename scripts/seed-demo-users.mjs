@@ -21,7 +21,9 @@ const env = Object.fromEntries(
 );
 
 const SUPABASE_URL = env.VITE_SUPABASE_URL;
-const SERVICE_KEY = env.VITE_SUPABASE_SERVICE_KEY;
+// Server-side only, never VITE_-prefixed — a VITE_ prefix would make Vite bundle this
+// into the client (the exact S-001 vulnerability BASELINE.md flags for Phase 10).
+const SERVICE_KEY = env.SUPABASE_SERVICE_ROLE_KEY;
 
 /** All demo civic accounts use this password (citizen → city head). */
 const DEMO_PASSWORD = 'demo123';
