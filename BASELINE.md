@@ -53,6 +53,65 @@ The Supabase CLI could not `link` (needs a separate personal access token we don
 
 **Still not deployed:** the 4 Edge Functions (`ingest-submission`, `extract-features`, `cluster-submissions`, `resolve-geography`) — deploying requires `supabase functions deploy`, which needs the Supabase CLI `link`ed with a personal access token (Settings → Access Tokens on the Supabase dashboard, or `supabase login`), which we don't have yet. Schema/RLS are now live and verified; the AI pipeline itself is still unexecuted.
 
+## Phase 7 EXECUTED LIVE 2026-07-05 (Evidence Fusion)
+
+Real, sourced data replaced the earlier LGD/PC placeholders:
+- `lgd_code` = 507 (Hyderabad **district** LGD code, verified via the LGD mirror CSV
+  at github.com/planemad/india-local-government-directory — the mirror's
+  `constituency/` folder only has Karnataka and Tamil Nadu, not Telangana, so a
+  distinct PC-level LGD id wasn't retrievable; the district code is used as a
+  labeled stand-in, not presented as a PC-specific id).
+- `pc_code` = TS-PC-09 (Hyderabad Lok Sabha PC number in Telangana, ECI code
+  S01-9, corroborated across electionpandit.com, Wikipedia, and Wikidata).
+- `population` = 3,943,323 (Census 2011, Hyderabad district — census2011.co.in,
+  corroborated by Wikipedia's Demographics of Hyderabad page).
+
+Built `fuse-evidence` Edge Function (deployed, tested live) and
+`seedDatasetSourcesAndEvidence()` in the seed script, seeding `dataset_sources`
+(LGD marked `is_live: true` since it was an actual live fetch this pass; UDISE+
+and Census marked `is_live: false` — cached/single-sample, per the plan's own
+honesty rule since bulk UDISE+ API access was never confirmed to exist
+publicly) and two real `evidence_records`: the Census population figure above,
+and a single real UDISE+ school sample (Shakuntala High School, UDISE code
+36221292296, Hyderabad — enrollment 690, 45 teachers, pupil-teacher ratio 15.3
+— sourced via a third-party UDISE+ aggregator since udiseplus.gov.in itself
+returned 403 on direct fetch; **explicitly not** a district-wide aggregate,
+labeled `confidence: low` and "not representative on its own").
+
+Built `EvidencePage.jsx` (`/staff/evidence`) — read-only, shows every figure
+with its dataset source, live/cached badge, retrieval date, and freshness
+label. Verified `fuse-evidence` live via curl: returns both evidence records
+with full provenance intact.
+
+**Still open:** only one real UDISE+ school sample exists (not a real district
+aggregate or multiple schools) — a single-school evidence record is
+illustrative, not something a real ranking should treat as district-representative.
+No live UDISE+ bulk connector exists; would need either confirmed API access
+or a larger manually-curated extract to go beyond this one sample.
+
+## Gemini + service-role key findings (live testing, 2026-07-05)
+
+Two real bugs found only by testing against live infra (both fixed, see git log):
+`gemini-2.0-flash` has zero quota on this account regardless of which key is used
+(account-level model restriction) — switched to `gemini-2.5-flash`, which spends
+part of its token budget on hidden "thinking" tokens by default and was truncating
+JSON output before the closing brace; fixed with `thinkingConfig.thinkingBudget: 0`.
+Embedding model `text-embedding-004` is 404 on this account; switched to
+`gemini-embedding-001` with `outputDimensionality: 768` to keep the existing
+`VECTOR(768)` schema. Re-verified the full pipeline end-to-end with real (not
+fallback) LLM output, and separately verified clustering: a near-duplicate pair
+correctly merged into one cluster while a distinct-topic submission stayed in
+its own — confirmed live via `cluster-submissions`.
+
+**Service-role key format note:** this project auto-injects the *new*
+`sb_secret_...`-format key as `SUPABASE_SERVICE_ROLE_KEY` inside Edge Functions,
+not the legacy JWT that's in `.env`/dashboard Settings → API (`0_g1T...`). Internal
+function-to-function calls are unaffected (both sides read the same platform env
+var, whatever format it is). But anyone invoking a service-role-only function
+*directly* from outside (e.g. the manual CLI trigger documented in
+`ClustersReviewPage.jsx`'s header comment, or `supabase functions invoke`) must
+use the new-format key — get it via `supabase projects api-keys --reveal --output json`.
+
 ## Phases 3-6 EXECUTED LIVE 2026-07-05
 
 Supabase CLI linked with a personal access token (`SUPABASE_ACCESS_TOKEN` in `.env`,

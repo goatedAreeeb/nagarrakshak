@@ -15,3 +15,6 @@ verify_jwt = true   # service-role only, same pattern as extract-features
 
 [functions.resolve-geography]
 verify_jwt = true   # service-role only, same pattern as extract-features
+
+[functions.fuse-evidence]
+verify_jwt = true   # service-role only, same pattern as extract-features

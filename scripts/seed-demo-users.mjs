@@ -120,32 +120,44 @@ async function upsertProfile(user, meta) {
 }
 
 /**
- * Demo constituency for geographic_units. Constituency name, district, and
- * state are real and verifiable (Hyderabad Lok Sabha PC, Telangana — see
- * https://hyderabad.telangana.gov.in/constituencies/ and
- * https://www.wikidata.org/wiki/Q3764307). The lgd_code/pc_code/ac_code values
- * are PLACEHOLDERS: this pass could not browse the live lgdirectory.gov.in
- * dataset to pull the actual numeric codes (see BASELINE.md / Phase 2 notes).
- * Do not present these codes as real in a demo — verify at lgdirectory.gov.in
- * before using them in anything beyond a labeled placeholder.
+ * Demo constituency for geographic_units — Hyderabad Lok Sabha PC, Telangana.
+ * Codes below are real and sourced, not fabricated:
+ *   - lgd_code (507) = Hyderabad DISTRICT's official LGD code, from the LGD mirror CSV
+ *     https://raw.githubusercontent.com/planemad/india-local-government-directory/main/administrative/2-district.csv
+ *     (row: 36,TELANGANA,507,HYDERABAD,5,536 — columns: State Code, State Name,
+ *     District Code, District Name, Census2001Code, Census2011Code). This is the
+ *     DISTRICT's LGD code, not a distinct PC-level LGD code — the mirror's
+ *     constituency/ folder only has Karnataka and Tamil Nadu files, not Telangana,
+ *     so a true LGD-internal PC-specific numeric ID was not retrievable this pass.
+ *   - pc_code (TS-PC-09) = Hyderabad's Parliamentary Constituency number within
+ *     Telangana (ECI code S01-9), corroborated across electionpandit.com/state/
+ *     telangana/pc/9/Hyderabad, en.wikipedia.org/wiki/Hyderabad_Lok_Sabha_constituency,
+ *     and wikidata.org/wiki/Q3764307. This is the standard public PC number, not
+ *     necessarily LGD's own internal PC record ID.
+ * Still not independently verified: population figures (left null), and the exact
+ * LGD-internal (not ECI) numeric PC identifier. Verify at lgdirectory.gov.in directly
+ * before using in anything beyond a labeled demo.
  */
 const GEOGRAPHIC_UNITS_SEED = [
   {
-    name: 'Hyderabad Parliamentary Constituency (DEMO — LGD code unverified)',
+    name: 'Hyderabad Parliamentary Constituency (DEMO — see seed script comment for source/verification status)',
     level: 'parliamentary_constituency',
-    lgd_code: 'PLACEHOLDER-VERIFY-AT-LGDIRECTORY',
-    pc_code: 'PLACEHOLDER-VERIFY-AT-LGDIRECTORY',
+    lgd_code: '507', // Hyderabad DISTRICT's LGD code (verified) — not a distinct PC-level LGD id
+    pc_code: 'TS-PC-09', // Hyderabad Lok Sabha PC number in Telangana, ECI code S01-9 (verified via secondary sources)
     pc_name: 'Hyderabad',
     district: 'Hyderabad',
     state: 'Telangana',
-    population: null,
-    population_census_year: null,
+    // Real Census 2011 figure for Hyderabad DISTRICT (not PC-specific — no PC-level
+    // population breakdown was retrievable this pass). Source: census2011.co.in/census/
+    // district/122-hyderabad.html, corroborated by en.wikipedia.org/wiki/Demographics_of_Hyderabad.
+    population: 3943323,
+    population_census_year: 2011,
     // A real, well-known city-center point (not a fabricated boundary) — good enough for
     // resolve-geography's GPS-nearest-centroid matching in a demo; a real Lok Sabha PC
     // boundary polygon should replace this before any non-demo use.
     boundary_geojson: { type: 'Point', coordinates: [78.4867, 17.385] },
     boundary_crosswalk_note:
-      'Demo seed row only — real LGD/PC codes not verified in this pass; boundary_geojson is a city-center point, not a real constituency polygon. Replace before any non-demo use.',
+      'Demo seed row. lgd_code is the Hyderabad DISTRICT LGD code (real, verified), used as a stand-in since a distinct PC-level LGD id was not retrievable this pass. pc_code (TS-PC-09) reflects the real ECI PC number (S01-9), not an LGD-internal PC record id. boundary_geojson is a city-center point, not a real constituency polygon. Replace before any non-demo use.',
   },
 ];
 
@@ -178,7 +190,133 @@ async function seedGeographicUnits() {
       const err = await insertRes.text();
       throw new Error(`geographic_units insert failed: ${err}`);
     }
-    console.log('OK geographic_units demo constituency seeded (LGD codes are placeholders — see comment above):', unit.name);
+    console.log('OK geographic_units demo constituency seeded (see comment above for source/verification status per field):', unit.name);
+  }
+}
+
+/**
+ * Registry of connected datasets (REPORT_2 Part XI §32). LGD is a real live fetch
+ * (github mirror of lgdirectory.gov.in, fetched during this development pass — see
+ * BASELINE.md); UDISE+ and Census are cached single-record/single-figure extracts,
+ * NOT live API integrations — bulk UDISE+ API access was never confirmed to exist
+ * publicly, and Census village-level data has a real, disclosed freshness problem
+ * (2011 is the latest full release). is_live reflects this honestly per dataset.
+ */
+const DATASET_SOURCES_SEED = [
+  {
+    name: 'LGD',
+    source_url: 'https://raw.githubusercontent.com/planemad/india-local-government-directory/main/administrative/2-district.csv',
+    license_note: 'Government open data (Ministry of Panchayati Raj / RGI) — verify redistribution terms at lgdirectory.gov.in before non-demo use.',
+    update_frequency: 'Infrequent (administrative boundary changes)',
+    dataset_version: 'planemad mirror, fetched 2026-07-05',
+    is_live: true,
+  },
+  {
+    name: 'UDISE+',
+    source_url: 'https://udiseplus.gov.in/ (bulk API access unconfirmed; sample record via mahadevmaitri.org aggregator)',
+    license_note: 'Government open data (Ministry of Education) — verify before redistribution.',
+    update_frequency: 'Annual (school year)',
+    dataset_version: 'Single cached sample record, fetched 2026-07-05 — NOT a live feed',
+    is_live: false,
+  },
+  {
+    name: 'Census of India',
+    source_url: 'https://censusindia.gov.in/ (2011 district figures via census2011.co.in)',
+    license_note: 'Government open data (Registrar General of India).',
+    update_frequency: 'Decennial — 2021 Census delayed; 2011 is the latest full release as of this pass',
+    dataset_version: '2011',
+    is_live: false,
+  },
+];
+
+async function seedDatasetSourcesAndEvidence() {
+  const sourceIds = {};
+  for (const source of DATASET_SOURCES_SEED) {
+    const checkRes = await fetch(
+      `${SUPABASE_URL}/rest/v1/dataset_sources?name=eq.${encodeURIComponent(source.name)}&select=id`,
+      { headers: { Authorization: `Bearer ${SERVICE_KEY}`, apikey: SERVICE_KEY } }
+    );
+    if (!checkRes.ok) {
+      console.warn('dataset_sources seed skipped (table may not exist yet):', await checkRes.text());
+      return;
+    }
+    const existing = await checkRes.json();
+    if (existing.length > 0) {
+      sourceIds[source.name] = existing[0].id;
+      console.log('SKIP dataset_sources (already seeded):', source.name);
+      continue;
+    }
+    const insertRes = await fetch(`${SUPABASE_URL}/rest/v1/dataset_sources`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${SERVICE_KEY}`, apikey: SERVICE_KEY, 'Content-Type': 'application/json', Prefer: 'return=representation' },
+      body: JSON.stringify(source),
+    });
+    if (!insertRes.ok) throw new Error(`dataset_sources insert failed: ${await insertRes.text()}`);
+    const [inserted] = await insertRes.json();
+    sourceIds[source.name] = inserted.id;
+    console.log('OK dataset_sources seeded:', source.name);
+  }
+
+  const geoRes = await fetch(
+    `${SUPABASE_URL}/rest/v1/geographic_units?pc_name=eq.Hyderabad&select=id`,
+    { headers: { Authorization: `Bearer ${SERVICE_KEY}`, apikey: SERVICE_KEY } }
+  );
+  const [geoUnit] = await geoRes.json();
+  if (!geoUnit) {
+    console.warn('evidence_records seed skipped: no Hyderabad geographic_unit found');
+    return;
+  }
+
+  const EVIDENCE_SEED = [
+    {
+      geographic_unit_id: geoUnit.id,
+      dataset_source_id: sourceIds['Census of India'],
+      category: 'demographics',
+      metric_name: 'district_population',
+      metric_value: 3943323,
+      unit: 'persons',
+      dataset_version: '2011',
+      freshness_label: 'Census 2011 — 15 years old as of 2026, flagged stale',
+      confidence: 'medium',
+      raw_payload: { source: 'census2011.co.in/census/district/122-hyderabad.html', district: 'Hyderabad', literacy_rate_2011: 83.25 },
+    },
+    {
+      geographic_unit_id: geoUnit.id,
+      dataset_source_id: sourceIds['UDISE+'],
+      category: 'school_infrastructure',
+      metric_name: 'sample_school_enrollment',
+      metric_value: 690,
+      unit: 'students',
+      dataset_version: 'single cached sample, 2026-07-05',
+      freshness_label: 'Single-school sample, not a district aggregate — not representative on its own',
+      confidence: 'low',
+      raw_payload: {
+        school_name: 'Shakuntala High School',
+        udise_code: '36221292296',
+        teachers: 45,
+        pupil_teacher_ratio: Math.round((690 / 45) * 10) / 10,
+        source: 'mahadevmaitri.org (third-party UDISE+ aggregator, not a direct udiseplus.gov.in API pull)',
+      },
+    },
+  ];
+
+  for (const ev of EVIDENCE_SEED) {
+    const checkRes = await fetch(
+      `${SUPABASE_URL}/rest/v1/evidence_records?geographic_unit_id=eq.${ev.geographic_unit_id}&metric_name=eq.${encodeURIComponent(ev.metric_name)}&select=id`,
+      { headers: { Authorization: `Bearer ${SERVICE_KEY}`, apikey: SERVICE_KEY } }
+    );
+    const existing = await checkRes.json();
+    if (existing.length > 0) {
+      console.log('SKIP evidence_records (already seeded):', ev.metric_name);
+      continue;
+    }
+    const insertRes = await fetch(`${SUPABASE_URL}/rest/v1/evidence_records`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${SERVICE_KEY}`, apikey: SERVICE_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify(ev),
+    });
+    if (!insertRes.ok) throw new Error(`evidence_records insert failed: ${await insertRes.text()}`);
+    console.log('OK evidence_records seeded:', ev.metric_name);
   }
 }
 
@@ -200,6 +338,7 @@ async function ensurePassword(userId, password) {
 
 async function main() {
   await seedGeographicUnits();
+  await seedDatasetSourcesAndEvidence();
 
   const { data: list } = await adminFetch('/users?page=1&per_page=200');
   const existing = new Map((list?.users || []).map((u) => [u.email, u]));

@@ -11,6 +11,7 @@ import {
   Megaphone,
   PenSquare,
   Layers,
+  Database,
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNotificationContext } from '../../contexts/NotificationContext';
@@ -103,6 +104,7 @@ export default function Sidebar({ onOpenNotifications }) {
         {isCitizen && <NavItem to="/report" icon={FilePlus} label="Post" />}
         {isCityHead && <NavItem to="/city/analytics" icon={BarChart3} label="Analytics" />}
         {isStaffV2 && <NavItem to="/staff/clusters" icon={Layers} label="Clusters" />}
+        {isStaffV2 && <NavItem to="/staff/evidence" icon={Database} label="Evidence" />}
         {showOfficerBadge && (
           <button type="button" onClick={onOpenNotifications} className="nav-item w-full mt-4">
             <Bell className="h-[22px] w-[22px]" strokeWidth={2} />

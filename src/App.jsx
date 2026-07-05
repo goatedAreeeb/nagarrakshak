@@ -15,6 +15,7 @@ import CityAnalyticsPage from './pages/CityAnalyticsPage';
 import NotFoundPage from './pages/NotFoundPage';
 import LandingPage from './pages/LandingPage';
 import ClustersReviewPage from './modules/clustering/ClustersReviewPage';
+import EvidencePage from './modules/evidence/EvidencePage';
 import { CityNoticesProvider } from './contexts/CityNoticesContext';
 
 function ProtectedRoute({ children, citizenOnly = false }) {
@@ -129,6 +130,16 @@ export default function App() {
           <ProtectedRoute>
             <StaffRoute>
               <ClustersReviewPage />
+            </StaffRoute>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/staff/evidence"
+        element={
+          <ProtectedRoute>
+            <StaffRoute>
+              <EvidencePage />
             </StaffRoute>
           </ProtectedRoute>
         }
