@@ -36,21 +36,32 @@ const CITIZEN_CREDITS = {
   'citizen6@demo.com': 250,
 };
 
+/**
+ * role_v2 backfill mirrors migration 0002_new_role_enum.sql's CASE mapping —
+ * kept in sync manually since this script runs against Supabase's REST API,
+ * not psql. citizen->citizen, worker/officer->mp_staff, supervisor/zonal->analyst,
+ * city->mp. New role_v2-only demo accounts below have no old-role equivalent.
+ */
 const DEMO_USERS = [
-  { email: 'citizen1@demo.com', password: DEMO_PASSWORD, name: 'Harshit Divekar', role: 'citizen', ward_id: 1 },
-  { email: 'citizen2@demo.com', password: DEMO_PASSWORD, name: 'Priya Sharma', role: 'citizen', ward_id: 3 },
-  { email: 'citizen3@demo.com', password: DEMO_PASSWORD, name: 'Anirudh Pratap Singh', role: 'citizen', ward_id: 2 },
-  { email: 'citizen4@demo.com', password: DEMO_PASSWORD, name: 'Parth Yadav', role: 'citizen', ward_id: 4 },
-  { email: 'citizen5@demo.com', password: DEMO_PASSWORD, name: 'Kavya Reddy', role: 'citizen', ward_id: 5 },
-  { email: 'citizen6@demo.com', password: DEMO_PASSWORD, name: 'Rohan Verma', role: 'citizen', ward_id: 6 },
-  { email: 'worker1@demo.com', password: DEMO_PASSWORD, name: 'Suresh Reddy', role: 'worker', dept: 'Roads' },
-  { email: 'worker2@demo.com', password: DEMO_PASSWORD, name: 'Lakshmi Devi', role: 'worker', dept: 'Sanitation' },
-  { email: 'officer1@demo.com', password: DEMO_PASSWORD, name: 'Venkat Rao', role: 'officer', dept: 'Roads' },
-  { email: 'officer2@demo.com', password: DEMO_PASSWORD, name: 'Anitha Prasad', role: 'officer', dept: 'HMWSSB' },
-  { email: 'supervisor1@demo.com', password: DEMO_PASSWORD, name: 'Ramesh Iyer', role: 'supervisor', zone: 'South' },
-  { email: 'zonal1@demo.com', password: DEMO_PASSWORD, name: 'Kavitha Naidu', role: 'zonal', zone: 'South' },
-  { email: 'city1@demo.com', password: DEMO_PASSWORD, name: 'GHMC Admin', role: 'city' },
-  { email: 'admin@nagarsevak.in', password: DEMO_PASSWORD, name: 'System Admin', role: 'city' },
+  { email: 'citizen1@demo.com', password: DEMO_PASSWORD, name: 'Harshit Divekar', role: 'citizen', role_v2: 'citizen', ward_id: 1 },
+  { email: 'citizen2@demo.com', password: DEMO_PASSWORD, name: 'Priya Sharma', role: 'citizen', role_v2: 'citizen', ward_id: 3 },
+  { email: 'citizen3@demo.com', password: DEMO_PASSWORD, name: 'Anirudh Pratap Singh', role: 'citizen', role_v2: 'citizen', ward_id: 2 },
+  { email: 'citizen4@demo.com', password: DEMO_PASSWORD, name: 'Parth Yadav', role: 'citizen', role_v2: 'citizen', ward_id: 4 },
+  { email: 'citizen5@demo.com', password: DEMO_PASSWORD, name: 'Kavya Reddy', role: 'citizen', role_v2: 'citizen', ward_id: 5 },
+  { email: 'citizen6@demo.com', password: DEMO_PASSWORD, name: 'Rohan Verma', role: 'citizen', role_v2: 'citizen', ward_id: 6 },
+  { email: 'worker1@demo.com', password: DEMO_PASSWORD, name: 'Suresh Reddy', role: 'worker', role_v2: 'mp_staff', dept: 'Roads' },
+  { email: 'worker2@demo.com', password: DEMO_PASSWORD, name: 'Lakshmi Devi', role: 'worker', role_v2: 'mp_staff', dept: 'Sanitation' },
+  { email: 'officer1@demo.com', password: DEMO_PASSWORD, name: 'Venkat Rao', role: 'officer', role_v2: 'mp_staff', dept: 'Roads' },
+  { email: 'officer2@demo.com', password: DEMO_PASSWORD, name: 'Anitha Prasad', role: 'officer', role_v2: 'mp_staff', dept: 'HMWSSB' },
+  { email: 'supervisor1@demo.com', password: DEMO_PASSWORD, name: 'Ramesh Iyer', role: 'supervisor', role_v2: 'analyst', zone: 'South' },
+  { email: 'zonal1@demo.com', password: DEMO_PASSWORD, name: 'Kavitha Naidu', role: 'zonal', role_v2: 'analyst', zone: 'South' },
+  { email: 'city1@demo.com', password: DEMO_PASSWORD, name: 'GHMC Admin', role: 'city', role_v2: 'mp' },
+  { email: 'admin@nagarsevak.in', password: DEMO_PASSWORD, name: 'System Admin', role: 'city', role_v2: 'administrator' },
+  // People's Priorities MP-office personas (no old-role equivalent):
+  { email: 'mpstaff1@demo.com', password: DEMO_PASSWORD, name: 'Divya Krishnan', role: 'citizen', role_v2: 'mp_staff' },
+  { email: 'mp1@demo.com', password: DEMO_PASSWORD, name: 'MP Office (Demo)', role: 'city', role_v2: 'mp' },
+  { email: 'districtauth1@demo.com', password: DEMO_PASSWORD, name: 'District Authority Liaison', role: 'citizen', role_v2: 'district_authority_liaison' },
+  { email: 'analyst1@demo.com', password: DEMO_PASSWORD, name: 'GIS/Data Analyst', role: 'citizen', role_v2: 'analyst' },
 ];
 
 async function adminFetch(path, options = {}) {
@@ -84,6 +95,7 @@ async function upsertProfile(user, meta) {
     email: user.email,
     name: meta.name,
     role: meta.role,
+    role_v2: meta.role_v2 ?? null,
     ward_id: meta.ward_id ?? null,
     dept: meta.dept ?? null,
     zone: meta.zone ?? null,
@@ -105,6 +117,65 @@ async function upsertProfile(user, meta) {
   }
 }
 
+/**
+ * Demo constituency for geographic_units. Constituency name, district, and
+ * state are real and verifiable (Hyderabad Lok Sabha PC, Telangana — see
+ * https://hyderabad.telangana.gov.in/constituencies/ and
+ * https://www.wikidata.org/wiki/Q3764307). The lgd_code/pc_code/ac_code values
+ * are PLACEHOLDERS: this pass could not browse the live lgdirectory.gov.in
+ * dataset to pull the actual numeric codes (see BASELINE.md / Phase 2 notes).
+ * Do not present these codes as real in a demo — verify at lgdirectory.gov.in
+ * before using them in anything beyond a labeled placeholder.
+ */
+const GEOGRAPHIC_UNITS_SEED = [
+  {
+    name: 'Hyderabad Parliamentary Constituency (DEMO — LGD code unverified)',
+    level: 'parliamentary_constituency',
+    lgd_code: 'PLACEHOLDER-VERIFY-AT-LGDIRECTORY',
+    pc_code: 'PLACEHOLDER-VERIFY-AT-LGDIRECTORY',
+    pc_name: 'Hyderabad',
+    district: 'Hyderabad',
+    state: 'Telangana',
+    population: null,
+    population_census_year: null,
+    boundary_crosswalk_note:
+      'Demo seed row only — real LGD/PC codes not verified in this pass. Replace before any non-demo use.',
+  },
+];
+
+async function seedGeographicUnits() {
+  for (const unit of GEOGRAPHIC_UNITS_SEED) {
+    const checkRes = await fetch(
+      `${SUPABASE_URL}/rest/v1/geographic_units?name=eq.${encodeURIComponent(unit.name)}&select=id`,
+      { headers: { Authorization: `Bearer ${SERVICE_KEY}`, apikey: SERVICE_KEY } }
+    );
+    if (!checkRes.ok) {
+      const err = await checkRes.text();
+      console.warn('geographic_units seed skipped (table may not exist yet — run migrations first):', err);
+      return;
+    }
+    const existingRows = await checkRes.json();
+    if (existingRows.length > 0) {
+      console.log('SKIP geographic_units (already seeded):', unit.name);
+      continue;
+    }
+    const insertRes = await fetch(`${SUPABASE_URL}/rest/v1/geographic_units`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${SERVICE_KEY}`,
+        apikey: SERVICE_KEY,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(unit),
+    });
+    if (!insertRes.ok) {
+      const err = await insertRes.text();
+      throw new Error(`geographic_units insert failed: ${err}`);
+    }
+    console.log('OK geographic_units demo constituency seeded (LGD codes are placeholders — see comment above):', unit.name);
+  }
+}
+
 async function ensurePassword(userId, password) {
   const res = await fetch(`${SUPABASE_URL}/auth/v1/admin/users/${userId}`, {
     method: 'PUT',
@@ -122,6 +193,8 @@ async function ensurePassword(userId, password) {
 }
 
 async function main() {
+  await seedGeographicUnits();
+
   const { data: list } = await adminFetch('/users?page=1&per_page=200');
   const existing = new Map((list?.users || []).map((u) => [u.email, u]));
 
