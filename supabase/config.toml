@@ -18,3 +18,9 @@ verify_jwt = true   # service-role only, same pattern as extract-features
 
 [functions.fuse-evidence]
 verify_jwt = true   # service-role only, same pattern as extract-features
+
+[functions.compute-priority]
+verify_jwt = true   # service-role only, same pattern as extract-features
+
+[functions.generate-explanation]
+verify_jwt = true   # service-role only, same pattern as extract-features

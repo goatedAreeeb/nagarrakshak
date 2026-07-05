@@ -53,6 +53,47 @@ The Supabase CLI could not `link` (needs a separate personal access token we don
 
 **Still not deployed:** the 4 Edge Functions (`ingest-submission`, `extract-features`, `cluster-submissions`, `resolve-geography`) — deploying requires `supabase functions deploy`, which needs the Supabase CLI `link`ed with a personal access token (Settings → Access Tokens on the Supabase dashboard, or `supabase login`), which we don't have yet. Schema/RLS are now live and verified; the AI pipeline itself is still unexecuted.
 
+## Phase 8 EXECUTED LIVE 2026-07-05 (Priority Engine — core differentiator)
+
+Built and deployed `compute-priority` (deterministic weighted-MCDA, no LLM call
+at all) and `generate-explanation` (PROMPT-003, narrates an already-computed
+score with post-generation citation validation). Also fills a real gap neither
+report actually specified: nothing in REPORT_1/REPORT_2's API catalogue creates
+a `development_proposal` from a `theme_cluster` — `compute-priority` now accepts
+either `{proposal_id}` to score an existing proposal, or `{cluster_id, title,
+category}` to bootstrap one first.
+
+**Design choice honoring the plan's own critique (research bible Part IV
+§12-13):** equity is applied as a *multiplier* on population_impact, not a
+separate additively-weighted term — treating it as independent risks
+double-counting, which is exactly what that critique warned against. Weights
+are visible constants in the function source and mirrored (with a documented
+sync-debt note) in `WeightSettingsPage.jsx` (`/staff/settings/weights`),
+read-only for this MVP per the plan's own allowance.
+
+**Verified live end-to-end** (`scripts/verify-priority-engine.mjs`): a real
+citizen submission → clustered → proposal bootstrapped from the cluster →
+scored. Real evidence flowed all the way through — `population_impact` used
+the actual UDISE+ sample enrollment (690) over district population (3,943,323);
+`severity_need` used the real mean sentiment from `extract-features`
+('concerned' → 0.6); `cost`/`urgency` came from the internal rule tables.
+`equity_correction` and `feasibility` correctly stayed `missing_data: true`
+rather than being guessed. **Determinism confirmed**: re-running
+`compute-priority` on the same proposal_id produced the bit-identical
+`total_score` (0.3412485208988639) both times. `generate-explanation` cited
+only real component numbers (`validated: true`) and correctly stated evidence
+for the two missing components "is not yet available" rather than inventing a
+value for them.
+
+This demo submission/cluster/proposal was kept (not deleted like earlier probe
+data) — it's clean, realistic content suitable for Phase 12's demo dataset,
+not throwaway test junk.
+
+**Still open:** `severity_need` is a sentiment-based proxy, not a validated
+infrastructure-gap severity index (no such dataset connected); `feasibility`
+has no data source at all yet (correctly flagged, never fabricated). Both are
+real, disclosed limitations — not fabricated to look more complete.
+
 ## Phase 7 EXECUTED LIVE 2026-07-05 (Evidence Fusion)
 
 Real, sourced data replaced the earlier LGD/PC placeholders:
