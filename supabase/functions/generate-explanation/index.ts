@@ -147,6 +147,16 @@ Deno.serve(async (req: Request) => {
 
   const finalText = validated ? explanationText! : FALLBACK_TEXT;
 
+  // Persisted so staff can read it via a normal RLS-scoped select — they can't call
+  // this service-role-only function directly from the browser (see migration 0012).
+  const { error: persistError } = await supabase
+    .from('priority_scores')
+    .update({ explanation_text: finalText, explanation_validated: validated })
+    .eq('id', priorityScore.id);
+  if (persistError) {
+    console.error('Failed to persist explanation:', persistError.message);
+  }
+
   return jsonResponse({
     proposal_id: payload.proposal_id,
     explanation_text: finalText,

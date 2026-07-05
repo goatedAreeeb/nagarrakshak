@@ -17,6 +17,9 @@ import LandingPage from './pages/LandingPage';
 import ClustersReviewPage from './modules/clustering/ClustersReviewPage';
 import EvidencePage from './modules/evidence/EvidencePage';
 import WeightSettingsPage from './modules/prioritization/WeightSettingsPage';
+import ProposalsPage from './modules/governance/ProposalsPage';
+import ProposalDetailPage from './modules/governance/ProposalDetailPage';
+import AuditLogPage from './modules/governance/AuditLogPage';
 import { CityNoticesProvider } from './contexts/CityNoticesContext';
 
 function ProtectedRoute({ children, citizenOnly = false }) {
@@ -151,6 +154,36 @@ export default function App() {
           <ProtectedRoute>
             <StaffRoute>
               <WeightSettingsPage />
+            </StaffRoute>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/staff/proposals"
+        element={
+          <ProtectedRoute>
+            <StaffRoute>
+              <ProposalsPage />
+            </StaffRoute>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/staff/proposals/:id"
+        element={
+          <ProtectedRoute>
+            <StaffRoute>
+              <ProposalDetailPage />
+            </StaffRoute>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/staff/audit-log"
+        element={
+          <ProtectedRoute>
+            <StaffRoute>
+              <AuditLogPage />
             </StaffRoute>
           </ProtectedRoute>
         }

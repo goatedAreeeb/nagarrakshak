@@ -24,3 +24,6 @@ verify_jwt = true   # service-role only, same pattern as extract-features
 
 [functions.generate-explanation]
 verify_jwt = true   # service-role only, same pattern as extract-features
+
+[functions.log-override]
+verify_jwt = true   # any authenticated user may call; the function itself rejects non-mp_staff/mp callers

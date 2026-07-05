@@ -59,6 +59,25 @@ const COST_BAND_BY_CATEGORY: Record<string, { band: string; score: number }> = {
 };
 const DEFAULT_COST_BAND = { band: 'unknown', score: null as number | null };
 
+// Illustrative rule-based routing (research bible Part II §3 / NPS-GOV-001: an MP
+// can recommend MPLADS-eligible works, refer other-scheme-appropriate needs
+// elsewhere, or only advocate where no current scheme applies). This is NOT
+// verified against the actual MPLADS admissibility annexures item-by-item — the
+// research bible itself flags exact admissible-category rules as `[U]` unverified
+// in its own research pass. Treat this as a starting heuristic that a real
+// deployment must validate against the current MPLADS Guidelines, not as a
+// legally authoritative admissibility determination.
+const ROUTING_BY_CATEGORY: Record<string, { routing: string; rationale: string }> = {
+  school_infrastructure: { routing: 'mplads_eligible', rationale: 'School building/infrastructure works are a plausible MPLADS-admissible category (illustrative rule, not verified against the current Guidelines annexures).' },
+  road_repair: { routing: 'mplads_eligible', rationale: 'Road/infrastructure repair is a plausible MPLADS-admissible category (illustrative rule, not verified against the current Guidelines annexures).' },
+  water_supply: { routing: 'mplads_eligible', rationale: 'Water supply infrastructure is a plausible MPLADS-admissible category (illustrative rule, not verified against the current Guidelines annexures).' },
+  drainage: { routing: 'mplads_eligible', rationale: 'Drainage infrastructure is a plausible MPLADS-admissible category (illustrative rule, not verified against the current Guidelines annexures).' },
+  electricity: { routing: 'mplads_eligible', rationale: 'Electrical infrastructure is a plausible MPLADS-admissible category (illustrative rule, not verified against the current Guidelines annexures).' },
+  health_facility: { routing: 'refer_elsewhere', rationale: 'Health facility capital works often route through state health schemes rather than MPLADS — needs case-by-case admissibility check, not assumed eligible.' },
+  vocational_training: { routing: 'refer_elsewhere', rationale: 'Skill/vocational training infrastructure typically sits under Skill India / state skill-development schemes rather than MPLADS — advocacy or referral is the safer default.' },
+};
+const DEFAULT_ROUTING = { routing: 'advocacy_only', rationale: 'No scheme-eligibility rule matched this category — routed as advocacy-only pending manual review, not assumed fundable.' };
+
 // Urgency rule table — category-specific baseline, corroborated/boosted by the
 // submission's own extracted sentiment (never overridden by an LLM-produced number).
 const URGENCY_BASE_BY_CATEGORY: Record<string, number> = {
@@ -310,6 +329,46 @@ Deno.serve(async (req: Request) => {
     return jsonResponse({ error: `Failed to write score_components: ${componentsError.message}` }, 500);
   }
 
+  // Rank among all scored proposals in the same geography — recomputed fresh each
+  // time rather than stored incrementally, so it never drifts out of sync. Counts
+  // proposals scored strictly higher (rather than trying to findIndex this proposal
+  // among its own siblings) so a floating-point round-trip mismatch between the
+  // in-memory totalScore and the value just read back from Postgres can't produce
+  // a wrong rank — tested live and caught exactly this bug during Phase 9 verification.
+  const { data: siblingScores } = await supabase
+    .from('priority_scores')
+    .select('total_score, development_proposals!inner(geographic_unit_id)')
+    .eq('development_proposals.geographic_unit_id', proposal.geographic_unit_id)
+    .neq('proposal_id', proposal.id);
+  const RANK_EPSILON = 1e-9;
+  const rank = (siblingScores ?? []).filter((s) => s.total_score > totalScore + RANK_EPSILON).length + 1;
+
+  const routing = (category && ROUTING_BY_CATEGORY[category]) || DEFAULT_ROUTING;
+  const { error: recommendationError } = await supabase.from('recommendations').insert({
+    proposal_id: proposal.id,
+    routing: routing.routing,
+    rank,
+    rationale: routing.rationale,
+  });
+  if (recommendationError) {
+    console.error('Failed to write recommendation:', recommendationError.message);
+  }
+
+  // Fire-and-forget hand-off to generate-explanation — same non-blocking pattern as
+  // ingest-submission's chain to extract-features. Staff read the persisted result
+  // via priority_scores.explanation_text (migration 0012), not by calling this
+  // service-role-only chain themselves.
+  const explanationTask = fetch(`${SUPABASE_URL}/functions/v1/generate-explanation`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${SERVICE_ROLE_KEY}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ proposal_id: proposal.id }),
+  }).catch((err) => console.error('generate-explanation hand-off failed for', proposal.id, err));
+  // @ts-ignore — EdgeRuntime is a Supabase Edge Runtime global, not a standard Deno type.
+  if (typeof EdgeRuntime !== 'undefined' && EdgeRuntime?.waitUntil) {
+    // @ts-ignore
+    EdgeRuntime.waitUntil(explanationTask);
+  }
+
   return jsonResponse({
     proposal_id: proposal.id,
     priority_score_id: priorityScore.id,
@@ -318,5 +377,7 @@ Deno.serve(async (req: Request) => {
     model_version: MODEL_VERSION,
     components,
     weights: WEIGHTS,
+    routing: routing.routing,
+    rank,
   });
 });

@@ -53,6 +53,59 @@ The Supabase CLI could not `link` (needs a separate personal access token we don
 
 **Still not deployed:** the 4 Edge Functions (`ingest-submission`, `extract-features`, `cluster-submissions`, `resolve-geography`) — deploying requires `supabase functions deploy`, which needs the Supabase CLI `link`ed with a personal access token (Settings → Access Tokens on the Supabase dashboard, or `supabase login`), which we don't have yet. Schema/RLS are now live and verified; the AI pipeline itself is still unexecuted.
 
+## Phase 9 EXECUTED LIVE 2026-07-05 (MP Decision Dashboard — CP-9 confirmed)
+
+Two more gaps filled before the dashboard could actually work: (1)
+`generate-explanation`'s output was never persisted anywhere staff could read
+it (it's service-role-only, staff can't call it from the browser) — added
+migration 0012 (`priority_scores.explanation_text`/`explanation_validated`)
+and had `compute-priority` chain into `generate-explanation` via
+`EdgeRuntime.waitUntil`, same pattern as the earlier ingest→extract chain. (2)
+Nothing created a `recommendations` row (the MPLADS-eligibility routing) from
+a scored proposal — added a rule-based `ROUTING_BY_CATEGORY` table inside
+`compute-priority`, explicitly labeled illustrative/not verified against the
+actual MPLADS admissibility annexures (research bible itself flags exact
+admissible categories as `[U]` unverified).
+
+Built and deployed `log-override` — the one client-callable governance-write
+function, called with the staff member's own JWT (so we know who they are)
+but using a service-role client internally to write `human_overrides` +
+`audit_events` atomically, since `audit_events` has zero client INSERT policy
+by design. Two independent enforcement layers: the function's own role check
+AND migration 0009's RLS backstop.
+
+**Real bug caught and fixed by live testing**: rank computation used
+`findIndex(...) + 1 || fallback`. When `findIndex` legitimately found the
+proposal at position 0, `0 + 1 = 1`, but `1` is truthy so that's fine — the
+actual bug was a floating-point round-trip mismatch between the in-memory
+`totalScore` and the value just read back from Postgres, making `<=`
+comparison fail, `findIndex` return `-1`, `-1 + 1 = 0`, and `0 || fallback`
+incorrectly trigger the fallback (0 is falsy in JS) — observed live as
+`rank: 2` for the only proposal in the geography. Fixed by counting
+strictly-higher-scoring siblings (excluding self via `.neq`) instead of
+trying to find the proposal's own position among values re-read from the DB.
+Verified fix: rank now correctly shows 1.
+
+**CP-9 verified live** (`scripts/verify-log-override.mjs`): citizen and
+analyst both rejected by `log-override` (403, role check), `mp_staff`
+allowed — writes confirmed atomic (`human_overrides` row has a matching
+`audit_events` row with `event_type: 'override'`). This test override
+(`override_reason: 'RLS/role probe as mp_staff'`) was **not deleted from the
+audit log** — the whole point of Phase 9's audit trail is append-only
+immutability, so scrubbing a real, valid action to keep the demo tidy would
+undermine the exact guarantee being demonstrated.
+
+Built `ProposalsPage.jsx` (`/staff/proposals`, ranked list with routing
+badges), `ProposalDetailPage.jsx` (`/staff/proposals/:id`, full score
+breakdown + evidence + explanation + override form, override UI only rendered
+for `mp_staff`/`mp` roles), and `AuditLogPage.jsx` (`/staff/audit-log`,
+read-only).
+
+**Still open:** only one real proposal exists (the Phase 8 demo one) — the
+ranked list and rank-among-siblings logic haven't been exercised with
+multiple competing proposals yet. `severity_need`'s sentiment-proxy and
+`feasibility`'s total absence of a data source remain open from Phase 8.
+
 ## Phase 8 EXECUTED LIVE 2026-07-05 (Priority Engine — core differentiator)
 
 Built and deployed `compute-priority` (deterministic weighted-MCDA, no LLM call
