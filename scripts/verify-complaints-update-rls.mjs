@@ -1,10 +1,12 @@
 // RLS policy test matrix for the `complaints` UPDATE policies fixed in
-// migration 0013 (Phase 10 / CP-10). Run AFTER applying that migration.
+// migration 0013 (Phase 10 / CP-10).
 //
-// Confirms the bypass is actually closed (citizen2/worker1-unassigned/
-// officer-wrong-dept must be REJECTED) and that the legitimate workflow still
-// works (citizen-owner, officer-same-dept assigning a worker, worker-once-
-// assigned, supervisor oversight must be ALLOWED).
+// SUPERSEDED by migration 0010 (Phase 11): complaints is now frozen entirely
+// (all write policies dropped, read-only for every role), so the "ALLOWED"
+// assertions below (worker-once-assigned, supervisor oversight) now correctly
+// fail — that's expected, not a regression. See scripts/verify-frozen-tables.mjs
+// for the current, correct expectations. Kept as a historical record of the
+// Phase 10 scoped-write state.
 //
 // Usage: node scripts/verify-complaints-update-rls.mjs <sb_secret_key>
 

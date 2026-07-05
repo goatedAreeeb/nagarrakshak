@@ -344,12 +344,21 @@ Deno.serve(async (req: Request) => {
   const rank = (siblingScores ?? []).filter((s) => s.total_score > totalScore + RANK_EPSILON).length + 1;
 
   const routing = (category && ROUTING_BY_CATEGORY[category]) || DEFAULT_ROUTING;
-  const { error: recommendationError } = await supabase.from('recommendations').insert({
-    proposal_id: proposal.id,
-    routing: routing.routing,
-    rank,
-    rationale: routing.rationale,
-  });
+  // Upsert, not insert — compute-priority is meant to be safely re-run on an
+  // existing proposal (see the determinism check above), and recommendations
+  // is 1:1 with development_proposals (log-override updates this same row's
+  // rank in place). A plain insert here silently accumulated duplicate rows
+  // on every re-score until migration 0014 added the unique constraint this
+  // relies on (found via Phase 11 integration testing).
+  const { error: recommendationError } = await supabase.from('recommendations').upsert(
+    {
+      proposal_id: proposal.id,
+      routing: routing.routing,
+      rank,
+      rationale: routing.rationale,
+    },
+    { onConflict: 'proposal_id' }
+  );
   if (recommendationError) {
     console.error('Failed to write recommendation:', recommendationError.message);
   }
