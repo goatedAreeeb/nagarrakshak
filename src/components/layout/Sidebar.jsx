@@ -10,6 +10,7 @@ import {
   LogOut,
   Megaphone,
   PenSquare,
+  Layers,
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNotificationContext } from '../../contexts/NotificationContext';
@@ -50,12 +51,13 @@ function NavItem({ to, icon: Icon, label, end }) {
 }
 
 export default function Sidebar({ onOpenNotifications }) {
-  const { user, profile, role, signOut } = useAuth();
+  const { user, profile, role, roleV2, signOut } = useAuth();
   const { unreadCount } = useNotificationContext();
   const { filed, resolved, resolutionRate, loading } = useUserComplaintStats(user?.id);
   const showOfficerBadge = hasMinRole(role, 'officer') && role !== 'city';
   const isCitizen = role === 'citizen';
   const isCityHead = role === 'city';
+  const isStaffV2 = ['mp_staff', 'mp', 'analyst', 'district_authority_liaison', 'administrator'].includes(roleV2);
 
   return (
     <aside className="hidden md:flex fixed left-0 top-0 bottom-0 w-[275px] flex-col z-40 border-r border-glass-border bg-black/40 backdrop-blur-xl">
@@ -100,6 +102,7 @@ export default function Sidebar({ onOpenNotifications }) {
         )}
         {isCitizen && <NavItem to="/report" icon={FilePlus} label="Post" />}
         {isCityHead && <NavItem to="/city/analytics" icon={BarChart3} label="Analytics" />}
+        {isStaffV2 && <NavItem to="/staff/clusters" icon={Layers} label="Clusters" />}
         {showOfficerBadge && (
           <button type="button" onClick={onOpenNotifications} className="nav-item w-full mt-4">
             <Bell className="h-[22px] w-[22px]" strokeWidth={2} />

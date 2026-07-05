@@ -77,6 +77,29 @@ a real Supabase project. Old `gemini.js`/`duplicateCheck.js`/`officerRouting.js`
 and the `complaints` table are untouched — the officer/supervisor/zonal
 dashboards still read from the old schema and still work as before.
 
+## Phase 5 Note (Semantic Intelligence / Clustering)
+
+Added `supabase/functions/cluster-submissions/` — greedy nearest-centroid clustering
+using Gemini text-embedding-004, replacing the old `duplicateCheck.js` 150m-haversine
+suppression with clustering that preserves every submission and tracks
+`unique_reporter_count` per cluster (never deletes). Migration `0011` adds
+`pgvector` support (`submission_embeddings` table, `theme_clusters.centroid_embedding`)
+— numbered after 0010 deliberately, since 0010 is reserved as the plan's one
+destructive migration.
+
+Added `src/modules/clustering/ClustersReviewPage.jsx` (`/staff/clusters`, gated by a
+new `StaffRoute` guard checking `role_v2`) — read-only cluster review for MP-office
+staff. `cluster-submissions` is service-role-only by design (batch/scheduled per
+REPORT_2 Part V §14), so the UI does not have a "run clustering" button; the
+page's own header comment documents how to invoke it manually via the Supabase
+CLI for demo/dev purposes. A real scheduled trigger (pg_cron or a Supabase
+Scheduled Function) is explicitly deferred, post-MVP.
+
+Simplification, stated plainly: this is a greedy single-pass clusterer (compare
+against existing centroids, join-or-create), not HDBSCAN — an explicit, documented
+choice matching the time-boxed plan's "can start with a simpler clustering method."
+Unexecuted against a live database, same caveat as every prior phase.
+
 ## Reference Docs
 
 - `../PEOPLES_PRIORITIES_PROBLEM_STATEMENT_RESEARCH_BIBLE.md`

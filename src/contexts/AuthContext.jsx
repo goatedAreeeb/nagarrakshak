@@ -183,6 +183,7 @@ export function AuthProvider({ children }) {
         user,
         profile,
         role: profile?.role || 'citizen',
+        roleV2: profile?.role_v2 || 'citizen',
         loading,
         profileLoading,
         signOut,

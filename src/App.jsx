@@ -10,9 +10,11 @@ import MapPage from './pages/MapPage';
 import BillboardPage from './pages/BillboardPage';
 import BillboardPublishPage from './pages/BillboardPublishPage';
 import CityHeadRoute from './components/auth/CityHeadRoute';
+import StaffRoute from './components/auth/StaffRoute';
 import CityAnalyticsPage from './pages/CityAnalyticsPage';
 import NotFoundPage from './pages/NotFoundPage';
 import LandingPage from './pages/LandingPage';
+import ClustersReviewPage from './modules/clustering/ClustersReviewPage';
 import { CityNoticesProvider } from './contexts/CityNoticesContext';
 
 function ProtectedRoute({ children, citizenOnly = false }) {
@@ -118,6 +120,16 @@ export default function App() {
             <CityHeadRoute>
               <CityAnalyticsPage />
             </CityHeadRoute>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/staff/clusters"
+        element={
+          <ProtectedRoute>
+            <StaffRoute>
+              <ClustersReviewPage />
+            </StaffRoute>
           </ProtectedRoute>
         }
       />
