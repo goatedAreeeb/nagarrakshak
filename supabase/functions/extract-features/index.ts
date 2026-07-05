@@ -150,19 +150,19 @@ Deno.serve(async (req: Request) => {
     return jsonResponse({ error: 'submission_id is required' }, 400);
   }
 
-  let text = payload.text;
-  if (text === undefined) {
-    const { data: existing, error: fetchError } = await supabase
-      .from('citizen_submissions')
-      .select('raw_text, language')
-      .eq('id', payload.submission_id)
-      .single();
-    if (fetchError || !existing) {
-      return jsonResponse({ error: `Submission not found: ${fetchError?.message ?? payload.submission_id}` }, 404);
-    }
-    text = existing.raw_text ?? '';
-    payload.language = payload.language ?? existing.language;
+  // Always fetch the row: lat/lng is needed to chain into resolve-geography regardless
+  // of whether the caller already passed text inline.
+  const { data: existing, error: fetchError } = await supabase
+    .from('citizen_submissions')
+    .select('raw_text, language, lat, lng')
+    .eq('id', payload.submission_id)
+    .single();
+  if (fetchError || !existing) {
+    return jsonResponse({ error: `Submission not found: ${fetchError?.message ?? payload.submission_id}` }, 404);
   }
+
+  const text = payload.text ?? existing.raw_text ?? '';
+  payload.language = payload.language ?? existing.language;
 
   let features = await callGemini(text ?? '', payload.language ?? null);
   let usedFallback = false;
@@ -187,6 +187,25 @@ Deno.serve(async (req: Request) => {
 
   if (updateError) {
     return jsonResponse({ error: `Failed to write features: ${updateError.message}` }, 500);
+  }
+
+  if (existing.lat != null || features.location_mentions.length > 0) {
+    const geoTask = fetch(`${SUPABASE_URL}/functions/v1/resolve-geography`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${SERVICE_ROLE_KEY}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        submission_id: payload.submission_id,
+        lat: existing.lat,
+        lng: existing.lng,
+        location_mentions: features.location_mentions,
+      }),
+    }).catch((err) => console.error('resolve-geography hand-off failed for', payload.submission_id, err));
+
+    // @ts-ignore — EdgeRuntime is a Supabase Edge Runtime global, not a standard Deno type.
+    if (typeof EdgeRuntime !== 'undefined' && EdgeRuntime?.waitUntil) {
+      // @ts-ignore
+      EdgeRuntime.waitUntil(geoTask);
+    }
   }
 
   return jsonResponse({ submission_id: payload.submission_id, ...features, status, usedFallback });

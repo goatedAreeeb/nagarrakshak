@@ -100,6 +100,27 @@ against existing centroids, join-or-create), not HDBSCAN — an explicit, docume
 choice matching the time-boxed plan's "can start with a simpler clustering method."
 Unexecuted against a live database, same caveat as every prior phase.
 
+## Phase 6 Note (GIS — backend only, partial)
+
+Added `supabase/functions/resolve-geography/` (GPS-nearest-centroid, falling back to
+fuzzy name match against `location_mentions`) and chained `extract-features ->
+resolve-geography` via `EdgeRuntime.waitUntil`, completing the async pipeline:
+ingest-submission -> extract-features -> {cluster-submissions, resolve-geography}.
+
+**Not done in this pass:** the frontend half of Phase 6 — replacing
+`wards.health_score` in the `src/components/map/civic/` subsystem (25 files) with
+population-normalized hotspot density from `theme_clusters`. That subsystem is
+larger and less familiar than either audit report described (confirmed by file
+count during this pass), and touching it needs its own focused read-first pass
+per the plan's own principle ("no blind rewrite of a file without first reading
+its current content") rather than being folded into the same change as new
+backend logic. `geographic_units` also has no single centroid column yet —
+`resolve-geography` derives one on the fly from `boundary_geojson`, which is
+adequate for the backend logic but a real seed-data gap: the one demo
+`geographic_unit` seeded in Phase 2 has no `boundary_geojson`, so GPS matching
+against it will not actually resolve until a real or placeholder boundary is
+seeded too.
+
 ## Reference Docs
 
 - `../PEOPLES_PRIORITIES_PROBLEM_STATEMENT_RESEARCH_BIBLE.md`

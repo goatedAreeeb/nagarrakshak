@@ -9,3 +9,9 @@ verify_jwt = true   # citizen/mp_staff/mp JWT required; RLS scopes what they can
 verify_jwt = true   # the service-role key is itself a valid JWT and passes this;
                      # the function additionally checks the bearer equals the exact
                      # service-role key, rejecting any other authenticated caller
+
+[functions.cluster-submissions]
+verify_jwt = true   # service-role only, same pattern as extract-features
+
+[functions.resolve-geography]
+verify_jwt = true   # service-role only, same pattern as extract-features
