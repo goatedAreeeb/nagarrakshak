@@ -9,7 +9,6 @@ import FeedPage from './pages/FeedPage';
 import MapPage from './pages/MapPage';
 import BillboardPage from './pages/BillboardPage';
 import BillboardPublishPage from './pages/BillboardPublishPage';
-import LeadershipPage from './pages/LeadershipPage';
 import CityHeadRoute from './components/auth/CityHeadRoute';
 import CityAnalyticsPage from './pages/CityAnalyticsPage';
 import NotFoundPage from './pages/NotFoundPage';
@@ -83,14 +82,6 @@ export default function App() {
         element={
           <ProtectedRoute>
             <FeedPage />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/leadership"
-        element={
-          <ProtectedRoute>
-            <LeadershipPage />
           </ProtectedRoute>
         }
       />

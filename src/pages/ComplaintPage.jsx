@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import AppShell from '../components/layout/AppShell';
-import ComplaintForm from '../components/citizen/ComplaintForm';
+import SubmissionForm from '../modules/submissions/SubmissionForm';
 import { useComplaintDraft } from '../contexts/ComplaintDraftContext.jsx';
 
 export default function ComplaintPage() {
@@ -19,7 +19,7 @@ export default function ComplaintPage() {
       title={safetyMode ? 'Report safety concern' : 'Report issue'}
       breadcrumb={[{ label: safetyMode ? 'Safety concern' : 'Report issue' }]}
     >
-      <ComplaintForm />
+      <SubmissionForm />
     </AppShell>
   );
 }

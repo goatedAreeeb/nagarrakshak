@@ -10,7 +10,6 @@ import {
   LogOut,
   Megaphone,
   PenSquare,
-  Trophy,
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNotificationContext } from '../../contexts/NotificationContext';
@@ -99,7 +98,6 @@ export default function Sidebar({ onOpenNotifications }) {
         {role === 'city' && (
           <NavItem to="/billboard/publish" icon={PenSquare} label="Post Bulletin" />
         )}
-        {isCitizen && <NavItem to="/leadership" icon={Trophy} label="Leadership" />}
         {isCitizen && <NavItem to="/report" icon={FilePlus} label="Post" />}
         {isCityHead && <NavItem to="/city/analytics" icon={BarChart3} label="Analytics" />}
         {showOfficerBadge && (

@@ -19,9 +19,9 @@ import { supabase } from '../../../lib/supabase';
 import { findOfficerForDept } from '../../../lib/officerRouting';
 import { createNotification } from '../../../contexts/NotificationContext';
 import { useAuth } from '../../../contexts/AuthContext';
-import DeptTag from '../../shared/DeptTag';
-import SeverityBadge from '../../shared/SeverityBadge';
-import LoadingSpinner from '../../shared/LoadingSpinner';
+import DeptTag from '../../../components/shared/DeptTag';
+import SeverityBadge from '../../../components/shared/SeverityBadge';
+import LoadingSpinner from '../../../components/shared/LoadingSpinner';
 
 function base64ToBlob(base64) {
   const parts = base64.split(',');
@@ -233,7 +233,7 @@ export default function StepAIResult({
 
       setSubmitted(true, complaint.id);
     } catch (err) {
-      setError(err.message || 'Failed to submit complaint. Please try again.');
+      setError(err.message || 'Failed to submit submission. Please try again.');
     } finally {
       setSubmitting(false);
     }
@@ -257,7 +257,7 @@ export default function StepAIResult({
         <div className="mx-auto w-20 h-20 rounded-full bg-accent-emerald/15 border border-accent-emerald/40 flex items-center justify-center mb-6 animate-success-check">
           <CheckCircle2 className="w-10 h-10 text-accent-emerald" strokeWidth={1.5} />
         </div>
-        <h2 className="text-2xl font-semibold text-text-primary mb-2">Complaint submitted</h2>
+        <h2 className="text-2xl font-semibold text-text-primary mb-2">Submission submitted</h2>
         <p className="text-text-secondary mb-6">
           Your report has been logged and routed to the relevant department.
           {safetySensitive && (
@@ -319,7 +319,7 @@ export default function StepAIResult({
           AI classification
         </h2>
         <p className="text-sm text-text-secondary mt-1">
-          Review how NagarRakshak categorized your complaint before submitting.
+          Review how NagarRakshak categorized your submission before submitting.
           {safetySensitive && (
             <span className="block mt-2 text-rose-200/90 text-[13px]">
               Priority filing: severity will be at least high (4/5) with a shorter SLA so staff see it
@@ -381,7 +381,7 @@ export default function StepAIResult({
               <div>
                 <p className="font-medium text-accent-amber">Possible duplicate nearby</p>
                 <p className="text-sm text-text-secondary mt-1">
-                  A similar {aiResult.dept} complaint exists within 150 m. Submitting will link your
+                  A similar {aiResult.dept} submission exists within 150 m. Submitting will link your
                   report to strengthen resolution priority.
                 </p>
               </div>
@@ -414,7 +414,7 @@ export default function StepAIResult({
             ) : (
               <>
                 <Send size={18} />
-                Submit complaint
+                Send submission
               </>
             )}
           </button>

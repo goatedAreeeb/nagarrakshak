@@ -89,7 +89,7 @@ export default function StepCamera({
       <div className="mb-6">
         <h2 className="text-lg font-semibold text-text-primary">Capture evidence</h2>
         <p className="text-sm text-text-secondary mt-1">
-          A photo helps AI route your complaint faster. If it is unsafe or not possible to photograph,
+          A photo helps AI route your submission faster. If it is unsafe or not possible to photograph,
           you can continue with location and a detailed written report below.
         </p>
       </div>
@@ -122,7 +122,7 @@ export default function StepCamera({
           <div className="relative rounded-xl overflow-hidden border border-border-strong bg-bg-surface aspect-video">
             <img
               src={imageBase64}
-              alt="Complaint preview"
+              alt="Submission preview"
               className="w-full h-full object-cover"
             />
           </div>

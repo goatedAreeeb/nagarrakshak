@@ -13,7 +13,7 @@ const STEPS = [
   { id: 3, label: 'Review' },
 ];
 
-export default function ComplaintForm() {
+export default function SubmissionForm() {
   const navigate = useNavigate();
   const {
     draft,

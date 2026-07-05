@@ -2,7 +2,6 @@ import { useLocation } from 'react-router-dom';
 import AppShell from '../components/layout/AppShell';
 import { useAuth } from '../contexts/AuthContext';
 import CitizenDashboard from '../components/citizen/CitizenDashboard';
-import WorkerDashboard from '../components/worker/WorkerDashboard';
 import OfficerDashboard from '../components/officer/OfficerDashboard';
 import SupervisorDashboard from '../components/supervisor/SupervisorDashboard';
 import ZonalDashboard from '../components/zonal/ZonalDashboard';
@@ -11,7 +10,6 @@ import { ComplaintExplorerProvider } from '../contexts/ComplaintExplorerContext'
 
 const TITLES = {
   citizen: 'My Dashboard',
-  worker: 'Field Tasks',
   officer: 'Department Control',
   supervisor: 'Zone Overview',
   zonal: 'Zonal Analytics',
@@ -25,7 +23,6 @@ export default function DashboardPage() {
 
   const dashboards = {
     citizen: <CitizenDashboard />,
-    worker: <WorkerDashboard />,
     officer: <OfficerDashboard />,
     supervisor: <SupervisorDashboard />,
     zonal: <ZonalDashboard />,

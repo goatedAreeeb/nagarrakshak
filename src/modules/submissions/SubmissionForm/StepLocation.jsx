@@ -8,8 +8,8 @@ import {
   isWithinHyderabad,
   formatCoordLabel,
 } from '../../../lib/geolocation';
-import LoadingSpinner from '../../shared/LoadingSpinner';
-import MapPreviewPanel from '../../shared/MapPreviewPanel';
+import LoadingSpinner from '../../../components/shared/LoadingSpinner';
+import MapPreviewPanel from '../../../components/shared/MapPreviewPanel';
 
 function wardDistanceKm(ward, lat, lng) {
   if (!ward?.lat || !ward?.lng) return null;
