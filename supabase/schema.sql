@@ -174,11 +174,13 @@ CREATE POLICY "Public complaints readable" ON complaints FOR SELECT USING (true)
 CREATE POLICY "Citizens insert own" ON complaints FOR INSERT
   WITH CHECK (auth.uid() = citizen_id);
 CREATE POLICY "Citizens update own" ON complaints FOR UPDATE
-  USING (auth.uid() = citizen_id OR EXISTS (
-    SELECT 1 FROM users u WHERE u.id = auth.uid() AND u.role IN ('worker','officer','supervisor','zonal','city')
-  ));
+  USING (auth.uid() = citizen_id);
 CREATE POLICY "Workers update assigned" ON complaints FOR UPDATE
-  USING (EXISTS (SELECT 1 FROM users u WHERE u.id = auth.uid()));
+  USING (
+    assigned_to = auth.uid()
+    OR EXISTS (SELECT 1 FROM users u WHERE u.id = auth.uid() AND u.role = 'officer' AND u.dept = complaints.dept)
+    OR EXISTS (SELECT 1 FROM users u WHERE u.id = auth.uid() AND u.role IN ('supervisor','zonal','city'))
+  );
 
 CREATE POLICY "Users readable" ON users FOR SELECT USING (true);
 CREATE POLICY "Users insert own" ON users FOR INSERT WITH CHECK (auth.uid() = id);

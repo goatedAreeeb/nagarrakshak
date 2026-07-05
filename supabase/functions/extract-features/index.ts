@@ -34,6 +34,13 @@ Schema:
 Do NOT include any field named priority, severity, rank, score, or urgency_level. Only the fields listed above.`;
 
 const FORBIDDEN_KEYS = ['priority', 'severity', 'rank', 'score', 'urgency_level', 'sla_hours'];
+const ALLOWED_CATEGORIES = [
+  'school_infrastructure', 'road_repair', 'water_supply', 'health_facility',
+  'vocational_training', 'drainage', 'electricity', 'other',
+];
+const ALLOWED_SENTIMENTS = ['urgent', 'concerned', 'neutral', 'positive'];
+const MAX_LIST_ITEMS = 20;
+const MAX_ITEM_LENGTH = 100;
 
 function jsonResponse(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
@@ -67,14 +74,26 @@ function extractFeaturesLocally(text: string) {
   };
 }
 
+function isCleanStringList(value: unknown): boolean {
+  if (value === null) return true;
+  if (!Array.isArray(value)) return false;
+  if (value.length > MAX_LIST_ITEMS) return false;
+  return value.every((v) => typeof v === 'string' && v.length <= MAX_ITEM_LENGTH);
+}
+
 function validateSchema(parsed: Record<string, unknown>): boolean {
   if (typeof parsed !== 'object' || parsed === null) return false;
   for (const key of FORBIDDEN_KEYS) {
     if (key in parsed) return false; // fail closed — never let a smuggled priority-shaped field through
   }
+  // Value-level checks, not just field-name checks — a field named "category" is
+  // schema-legal, but its *value* is still attacker-controlled text unless we pin
+  // it to the taxonomy the rest of the system understands (dashboard, clustering).
+  if ('category' in parsed && parsed.category !== null && !ALLOWED_CATEGORIES.includes(parsed.category as string)) return false;
+  if ('sentiment' in parsed && parsed.sentiment !== null && !ALLOWED_SENTIMENTS.includes(parsed.sentiment as string)) return false;
   if ('confidence' in parsed && typeof parsed.confidence !== 'number') return false;
-  if ('entities' in parsed && parsed.entities !== null && !Array.isArray(parsed.entities)) return false;
-  if ('location_mentions' in parsed && parsed.location_mentions !== null && !Array.isArray(parsed.location_mentions)) return false;
+  if ('entities' in parsed && !isCleanStringList(parsed.entities)) return false;
+  if ('location_mentions' in parsed && !isCleanStringList(parsed.location_mentions)) return false;
   return true;
 }
 
