@@ -8,6 +8,15 @@ import LoadingSpinner from '../../components/shared/LoadingSpinner';
 
 const CONFIDENCE_STYLES = { high: 'text-accent-emerald', medium: 'text-accent-amber', low: 'text-accent-red' };
 
+// Makes the MP-recommends / District-Authority-sanctions boundary (research
+// bible Part II §3) explicit on screen, not just implied by a raw enum value —
+// this is one of the fatal gaps a naive relabel would visibly miss.
+const ROUTING_DISPLAY = {
+  mplads_eligible: { label: 'MP recommends (MPLADS-eligible)', badgeClass: 'badge-cyan' },
+  refer_elsewhere: { label: 'Referred to District Authority', badgeClass: 'badge-amber' },
+  advocacy_only: { label: 'Advocacy only — no scheme match', badgeClass: 'badge-violet' },
+};
+
 export default function ProposalDetailPage() {
   const { id } = useParams();
   const { roleV2 } = useAuth();
@@ -186,7 +195,10 @@ export default function ProposalDetailPage() {
           <div className="card-elevated p-4">
             <p className="font-semibold text-text-primary mb-1">Routing</p>
             <p className="text-sm text-text-secondary">
-              <span className="badge-cyan">{recommendation.routing.replace(/_/g, ' ')}</span>
+              {(() => {
+                const display = ROUTING_DISPLAY[recommendation.routing] ?? { label: recommendation.routing.replace(/_/g, ' '), badgeClass: 'badge-cyan' };
+                return <span className={display.badgeClass}>{display.label}</span>;
+              })()}
             </p>
             <p className="text-xs text-text-muted mt-2">{recommendation.rationale}</p>
           </div>

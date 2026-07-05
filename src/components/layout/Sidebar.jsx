@@ -71,8 +71,8 @@ export default function Sidebar({ onOpenNotifications }) {
             <Shield className="h-5 w-5 text-void" strokeWidth={2.5} />
           </div>
           <div>
-            <h1 className="text-xl font-bold text-text-primary tracking-tight">NagarRakshak</h1>
-            <p className="text-[13px] text-text-muted">Hyderabad</p>
+            <h1 className="text-xl font-bold text-text-primary tracking-tight">People's Priorities</h1>
+            <p className="text-[13px] text-text-muted">Constituency Development</p>
           </div>
         </div>
       </div>
@@ -98,14 +98,22 @@ export default function Sidebar({ onOpenNotifications }) {
 
       <nav className="flex-1 px-2 py-2 space-y-0.5 overflow-y-auto">
         <NavItem to="/dashboard" icon={LayoutDashboard} label="Home" end />
-        <NavItem to="/map" icon={Map} label="Map" />
-        <NavItem to="/feed" icon={Rss} label="Feed" />
-        <NavItem to="/billboard" icon={Megaphone} label="Bulletin" />
-        {role === 'city' && (
-          <NavItem to="/billboard/publish" icon={PenSquare} label="Post Bulletin" />
+        {/* Map/Feed/Bulletin/Analytics are the old municipal-complaint domain (ward
+            health scores, GHMC bulletin) — kept routable for old-role accounts but
+            deliberately out of the People's Priorities demo path (Report 1's
+            HIDE-FROM-DEMO matrix), so they're hidden for citizen/staffV2 here. */}
+        {!isCitizen && !isStaffV2 && (
+          <>
+            <NavItem to="/map" icon={Map} label="Map" />
+            <NavItem to="/feed" icon={Rss} label="Feed" />
+            <NavItem to="/billboard" icon={Megaphone} label="Bulletin" />
+            {role === 'city' && (
+              <NavItem to="/billboard/publish" icon={PenSquare} label="Post Bulletin" />
+            )}
+            {isCityHead && <NavItem to="/city/analytics" icon={BarChart3} label="Analytics" />}
+          </>
         )}
         {isCitizen && <NavItem to="/report" icon={FilePlus} label="Post" />}
-        {isCityHead && <NavItem to="/city/analytics" icon={BarChart3} label="Analytics" />}
         {isStaffV2 && <NavItem to="/staff/proposals" icon={ClipboardList} label="Proposals" />}
         {isStaffV2 && <NavItem to="/staff/clusters" icon={Layers} label="Clusters" />}
         {isStaffV2 && <NavItem to="/staff/evidence" icon={Database} label="Evidence" />}

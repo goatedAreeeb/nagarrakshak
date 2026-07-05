@@ -8,7 +8,6 @@ import {
   ArrowRight,
   MapPin,
   TrendingUp,
-  Award,
   RefreshCw,
   Shield,
 } from 'lucide-react';
@@ -25,7 +24,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../lib/supabase';
 import { queryWithTimeout } from '../../lib/queryWithTimeout';
 import { useUserComplaintStats } from '../../hooks/useUserComplaintStats';
-import { getGreeting, citizenLevel, formatRelativeTime, formatComplaintId } from '../../lib/utils';
+import { getGreeting, formatRelativeTime, formatComplaintId } from '../../lib/utils';
 import MetricCard from '../shared/MetricCard';
 import StatusBadge from '../shared/StatusBadge';
 import DeptTag from '../shared/DeptTag';
@@ -145,7 +144,7 @@ export default function CitizenDashboard() {
           </h1>
           <p className="mt-1 flex items-center gap-1.5 text-[15px] text-text-muted">
             <MapPin className="h-4 w-4" />
-            {wardName} · {citizenLevel(profile?.credits || 0)}
+            {wardName}
           </p>
         </div>
         <div className="flex flex-col items-stretch sm:items-end gap-2 shrink-0">
@@ -160,7 +159,7 @@ export default function CitizenDashboard() {
         </div>
       </header>
 
-      <section className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+      <section className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <MetricCard
           icon={FileStack}
           label="Filed"
@@ -187,15 +186,6 @@ export default function CitizenDashboard() {
           accent="danger"
           onClick={() => focusComplaints('open')}
           className={filter === 'open' ? 'ring-1 ring-red-400/40' : ''}
-        />
-        <MetricCard
-          icon={Award}
-          label="Credits"
-          value={profile?.credits ?? 0}
-          sublabel="Civic rewards"
-          accent="violet"
-          onClick={() => focusComplaints('all')}
-          className="ring-0"
         />
       </section>
 

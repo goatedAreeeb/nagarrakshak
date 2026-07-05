@@ -186,7 +186,7 @@ export default function LandingMapPanel({ activeSection }) {
 
       <div className="pointer-events-none absolute left-8 top-8 z-20">
         <h3 className="font-mono text-xs font-black uppercase tracking-[0.3em] text-white/40">
-          Nagar Rakshak // Live City Matrix
+          People's Priorities // Constituency Demand Map
         </h3>
       </div>
 

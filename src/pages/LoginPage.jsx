@@ -18,8 +18,8 @@ export default function LoginPage() {
           <div className="inline-flex h-14 w-14 items-center justify-center rounded-full bg-white mb-4">
             <Shield className="h-7 w-7 text-void" strokeWidth={2.5} />
           </div>
-          <h1 className="text-3xl font-bold text-text-primary">NagarRakshak</h1>
-          <p className="text-[15px] text-text-muted mt-1">Hyderabad civic platform</p>
+          <h1 className="text-3xl font-bold text-text-primary">People's Priorities</h1>
+          <p className="text-[15px] text-text-muted mt-1">AI for constituency development planning</p>
         </div>
         <Login />
       </div>

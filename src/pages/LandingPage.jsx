@@ -36,18 +36,18 @@ export default function LandingPage() {
           <div className="relative flex h-12 w-12 items-center justify-center overflow-hidden rounded border border-white/5 bg-surface shadow-2xl">
             <img
               src="/images/logo.png"
-              alt="Nagar Rakshak"
+              alt="People's Priorities"
               className="h-10 w-10 object-contain opacity-80 transition-opacity group-hover:opacity-100"
             />
           </div>
           <div>
             <h1 className="text-xl font-black uppercase tracking-[0.2em] text-white/90 transition-colors group-hover:text-white md:text-2xl">
-              Nagar Rakshak
+              People's Priorities
             </h1>
             <div className="flex items-center gap-2">
               <div className="h-px w-6 bg-white/20" />
               <p className="font-mono text-[9px] uppercase tracking-[0.4em] text-gray-500">
-                Hyderabad Civic Command
+                Constituency Development Planning
               </p>
             </div>
           </div>

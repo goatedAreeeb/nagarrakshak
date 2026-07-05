@@ -91,7 +91,7 @@ export default function Signup() {
     <div className="card w-full max-w-md shadow-card">
       <div className="flex flex-col items-center text-center mb-8">
         <Shield className="w-12 h-12 text-accent-cyan mb-3" strokeWidth={1.5} />
-        <h1 className="text-xl font-semibold text-text-primary">NagarRakshak Hyderabad</h1>
+        <h1 className="text-xl font-semibold text-text-primary">People's Priorities</h1>
         <p className="text-sm text-text-secondary mt-1">Register as a citizen</p>
       </div>
 

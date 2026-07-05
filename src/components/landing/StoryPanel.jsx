@@ -5,27 +5,27 @@ import { ChevronDown } from 'lucide-react';
 const CASES = [
   {
     place: 'Tolichowki',
-    title: 'Drainage overflows every monsoon',
-    body: 'Residents file the same flooding complaint each year. The ticket stays open with photos, dates, and ward assignment until GHMC records an action.',
+    title: 'A leaking school roof, ranked against every other need',
+    body: 'Parents report two unusable classrooms before monsoon. UDISE+ enrollment data confirms falling attendance at the same school — citizen demand and independent evidence point the same way.',
     image: '/images/flooded_street.png',
-    alt: 'Flooded lane in Tolichowki',
-    note: 'Open 180 days',
+    alt: 'School building in Tolichowki',
+    note: 'Rank #2 · school_infrastructure',
   },
   {
     place: 'Miyapur',
-    title: 'Potholes on the main road',
-    body: 'A stretch near the metro was reported multiple times. Public status shows whether it was marked in progress, deferred, or closed—neighbours can verify.',
+    title: 'A water-supply gap, weighed against population served',
+    body: 'Multiple households report dry taps. The score is normalized by population served, not just complaint count, so a smaller but more severely affected area is not out-ranked by a louder one.',
     image: '/images/pothole_road.png',
-    alt: 'Damaged road in Miyapur',
-    note: 'Marked urgent',
+    alt: 'Water supply infrastructure in Miyapur',
+    note: 'Rank #5 · water_supply',
   },
   {
     place: 'Secunderabad',
-    title: 'Streetlights out for weeks',
-    body: 'After sunset the lane stays dark. Here every report gets a ticket number and an officer name from the day it is filed.',
+    title: 'A road-repair request, routed to the right authority',
+    body: 'MPLADS-eligibility is checked before it ever reaches a shortlist. Ineligible requests are referred onward rather than silently dropped or wrongly recommended.',
     image: '/images/broken_streetlights.png',
-    alt: 'Broken streetlights in Secunderabad',
-    note: 'No closure yet',
+    alt: 'Road infrastructure in Secunderabad',
+    note: 'Referred · district authority',
   },
 ];
 
@@ -33,21 +33,21 @@ const heroEase = [0.22, 1, 0.36, 1];
 
 const SDG_GOALS = [
   {
-    code: 'SDG 6',
-    title: 'Clean water & sanitation',
-    desc: 'Drainage, leaks, and flooding reports tied to accountable fixes.',
+    code: 'SDG 1',
+    title: 'No poverty',
+    desc: 'Budget-constrained ranking directs limited development funds where evidence says need is greatest.',
     variant: 'sdg6',
   },
   {
-    code: 'SDG 11',
-    title: 'Sustainable cities',
-    desc: 'Safer roads, lighting, and public spaces tracked ward by ward.',
+    code: 'SDG 10',
+    title: 'Reduced inequalities',
+    desc: 'Population-normalized scoring so a smaller, quieter constituency is not out-ranked by a louder one.',
     variant: 'sdg11',
   },
   {
     code: 'SDG 16',
     title: 'Peace, justice & strong institutions',
-    desc: 'Public timelines so civic response cannot disappear quietly.',
+    desc: 'Every rank is explainable and auditable — human override always requires a logged reason.',
     variant: 'sdg16',
   },
 ];
@@ -90,17 +90,17 @@ export default function StoryPanel({ onSectionChange }) {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.55, ease: heroEase }}
             >
-              Hyderabad
+              Hyderabad Parliamentary Constituency · Demo
             </motion.p>
 
-            <h1 className="story-cover__hero" aria-label="Your city. Your voice.">
+            <h1 className="story-cover__hero" aria-label="Every need. Ranked fairly.">
               <motion.span
                 className="story-cover__hero-line"
                 initial={{ opacity: 0, y: 28 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.7, delay: 0.12, ease: heroEase }}
               >
-                Your city.
+                Every need.
               </motion.span>
               <motion.span
                 className="story-cover__hero-line story-cover__hero-line--voice"
@@ -108,7 +108,7 @@ export default function StoryPanel({ onSectionChange }) {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.7, delay: 0.24, ease: heroEase }}
               >
-                Your voice.
+                Ranked fairly.
               </motion.span>
             </h1>
 
@@ -118,7 +118,7 @@ export default function StoryPanel({ onSectionChange }) {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.4, ease: heroEase }}
             >
-              Complaints on the map. Fixes on the record.
+              Citizen demand fused with public evidence — a transparent, budget-constrained ranking for the MP's office.
             </motion.p>
 
             <motion.button
@@ -139,7 +139,7 @@ export default function StoryPanel({ onSectionChange }) {
         <section id="on-the-ground" className="story-scroll sys-chapter">
           <h2 className="story-scroll__heading">On the ground</h2>
           <p className="story-scroll__lede">
-            Live zones on the map. Real reports from Hyderabad neighbourhoods.
+            Demand from constituents, fused with independent public evidence — not one signal alone.
           </p>
 
           <div className="story-cases">
@@ -161,13 +161,13 @@ export default function StoryPanel({ onSectionChange }) {
           <h2 className="story-scroll__heading">Who uses it</h2>
           <div className="story-scroll__prose">
             <p>
-              <strong>Residents</strong> file from their phone—photo, pin, short note.
+              <strong>Citizens</strong> submit in their own language—voice, photo, or text—and every submission counts even when duplicated.
             </p>
             <p>
-              <strong>Ward officers</strong> receive tickets for their area and update status.
+              <strong>MP staff</strong> review a ranked shortlist with visible weights and cited evidence, not a raw inbox.
             </p>
             <p>
-              <strong>City heads</strong> see which wards fall behind on the same map you see here.
+              <strong>The MP</strong> makes the final call — every override is logged with a reason, never silent.
             </p>
           </div>
         </section>
@@ -175,8 +175,7 @@ export default function StoryPanel({ onSectionChange }) {
         <section className="story-scroll sys-chapter">
           <h2 className="story-scroll__heading">UN Sustainable Development Goals</h2>
           <p className="story-scroll__lede">
-            Resolved issues on Nagar Rakshak align with global targets—city infrastructure work maps
-            to outcomes citizens can recognise.
+            A defensible, auditable basis for allocation decisions maps directly to global development targets.
           </p>
 
           <ul className="story-sdg">
@@ -193,7 +192,7 @@ export default function StoryPanel({ onSectionChange }) {
         </section>
 
         <footer className="story-scroll story-scroll--end sys-chapter">
-          <p className="story-end__copy">Nagar Rakshak · Hyderabad</p>
+          <p className="story-end__copy">People's Priorities · Hyderabad Parliamentary Constituency (Demo)</p>
         </footer>
       </div>
     </div>

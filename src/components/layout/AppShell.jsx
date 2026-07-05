@@ -16,13 +16,19 @@ function hasMinRole(role, minRole) {
   return roleIdx >= minIdx;
 }
 
-function mobileNavForRole(role) {
-  const items = [
-    { to: '/dashboard', icon: Home, label: 'Home' },
-    { to: '/map', icon: Map, label: 'Map' },
-    { to: '/feed', icon: Rss, label: 'Feed' },
-    { to: '/billboard', icon: Megaphone, label: 'Bulletin' },
-  ];
+const NEW_DOMAIN_ROLES = ['citizen', 'mp_staff', 'mp', 'analyst', 'district_authority_liaison', 'administrator'];
+
+function mobileNavForRole(role, roleV2) {
+  const items = [{ to: '/dashboard', icon: Home, label: 'Home' }];
+  // Map/Feed/Bulletin are the old municipal-complaint domain — kept routable for
+  // old-role accounts but out of the People's Priorities demo path, same as Sidebar.
+  if (!NEW_DOMAIN_ROLES.includes(roleV2)) {
+    items.push(
+      { to: '/map', icon: Map, label: 'Map' },
+      { to: '/feed', icon: Rss, label: 'Feed' },
+      { to: '/billboard', icon: Megaphone, label: 'Bulletin' }
+    );
+  }
   if (role === 'citizen') {
     items.push({ to: '/report', icon: FilePlus, label: 'Post' });
   }
@@ -31,10 +37,10 @@ function mobileNavForRole(role) {
 
 export default function AppShell({ children, title = 'Dashboard', breadcrumb = [] }) {
   const [panelOpen, setPanelOpen] = useState(false);
-  const { role } = useAuth();
+  const { role, roleV2 } = useAuth();
   const location = useLocation();
 
-  const mobileItems = mobileNavForRole(role).filter(
+  const mobileItems = mobileNavForRole(role, roleV2).filter(
     (item) => !item.minRole || hasMinRole(role, item.minRole)
   );
 
