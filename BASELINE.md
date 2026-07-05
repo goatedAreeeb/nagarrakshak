@@ -45,6 +45,38 @@
 
 Migrations `0001`-`0009` written under `supabase/migrations/` per Report 2 Part IV §12 (all additive, old tables untouched). **Not yet run against a live database** — no Supabase project is connected to this repo (see above). `scripts/seed-demo-users.mjs` updated to backfill `role_v2` on all demo accounts and seed one demo `geographic_units` row, but its `lgd_code`/`pc_code` values are explicitly labeled placeholders — a web search in this pass confirmed the LGD portal (lgdirectory.gov.in) exists and does carry PC/AC codes, but the actual numeric codes for the Hyderabad Lok Sabha constituency were not retrievable without browsing the live portal dataset directly, which was out of this pass's time budget. RLS policy test matrix (`supabase/tests/rls_policy_matrix.md`) documents expected per-role pass/fail but is also unexecuted pending a live project. **Before demo:** provision a real Supabase project, run migrations 0002-0009 in order, run `npm run seed:users`, verify the policy matrix, and replace the placeholder LGD codes with values pulled from lgdirectory.gov.in.
 
+## Phase 3+4 Note (Intake + Feature Extraction, merged)
+
+Built together rather than sequentially: in this codebase the "Review" step of the
+submission wizard *is* the AI-classification UI, so wiring intake without also
+replacing what that step displays would leave it showing stale Gemini
+dept/severity output against a schema that no longer stores it. Delivered:
+
+- `supabase/functions/ingest-submission/` — validates caller JWT, rate-limits
+  (20/hour), writes `citizen_submissions`/`submission_media`, hands off to
+  extract-features via `EdgeRuntime.waitUntil` (non-blocking).
+- `supabase/functions/extract-features/` — PROMPT-001 exactly as specified
+  (REPORT_2 Part VIII §23), service-role-only, rejects any smuggled
+  priority/severity field (fails closed to the deterministic keyword fallback),
+  writes category/entities/sentiment/confidence back onto the submission.
+- `StepAIResult.jsx` rewritten: uploads media, calls `ingest-submission`, polls
+  the submission row for async feature results, shows category/sentiment/
+  confidence instead of dept/severity/SLA. The old "review classification before
+  submitting" UX is inverted to "submit first, see structured features after" —
+  a real behavior change, matching the new async pipeline.
+- Added a language selector to the submission wizard (`en`/`hi`/`te`/`hi-en`)
+  as an MVP language-ID input. **Not done:** actual ASR transcription (no
+  provider wired — `transcribe-voice` function doesn't exist yet), translation,
+  and a real i18n UI layer — voice notes still upload as raw audio with no
+  transcript. This matches the plan's own "MVP: language ID + one ASR
+  language, partial" scope note, with ASR itself still outstanding.
+
+**Not run against a live database or deployed** — same caveat as Phase 2. Both
+functions are written to spec and internally consistent but unverified against
+a real Supabase project. Old `gemini.js`/`duplicateCheck.js`/`officerRouting.js`
+and the `complaints` table are untouched — the officer/supervisor/zonal
+dashboards still read from the old schema and still work as before.
+
 ## Reference Docs
 
 - `../PEOPLES_PRIORITIES_PROBLEM_STATEMENT_RESEARCH_BIBLE.md`

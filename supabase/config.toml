@@ -1,0 +1,11 @@
+# Supabase project config — created in Phase 3 alongside the first Edge Functions.
+# This repo has no linked Supabase project yet (see BASELINE.md); this file documents
+# intended function settings for whoever runs `supabase functions deploy`.
+
+[functions.ingest-submission]
+verify_jwt = true   # citizen/mp_staff/mp JWT required; RLS scopes what they can write
+
+[functions.extract-features]
+verify_jwt = true   # the service-role key is itself a valid JWT and passes this;
+                     # the function additionally checks the bearer equals the exact
+                     # service-role key, rejecting any other authenticated caller

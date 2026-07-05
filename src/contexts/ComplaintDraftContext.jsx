@@ -11,6 +11,7 @@ const EMPTY_DRAFT = {
   lng: null,
   address: '',
   description: '',
+  language: 'en',
   wardId: null,
   nearestWard: null,
   voiceNoteBase64: null,
@@ -85,6 +86,7 @@ export function ComplaintDraftProvider({ children }) {
   const setLng = useCallback((lng) => setDraft((d) => ({ ...d, lng })), [setDraft]);
   const setAddress = useCallback((address) => setDraft((d) => ({ ...d, address })), [setDraft]);
   const setDescription = useCallback((description) => setDraft((d) => ({ ...d, description })), [setDraft]);
+  const setLanguage = useCallback((language) => setDraft((d) => ({ ...d, language })), [setDraft]);
   const setWardId = useCallback((wardId) => setDraft((d) => ({ ...d, wardId })), [setDraft]);
   const setNearestWard = useCallback((nearestWard) => setDraft((d) => ({ ...d, nearestWard })), [setDraft]);
   const setVoiceNote = useCallback(
@@ -125,6 +127,7 @@ export function ComplaintDraftProvider({ children }) {
       setLng,
       setAddress,
       setDescription,
+      setLanguage,
       setWardId,
       setNearestWard,
       setVoiceNote,
@@ -145,6 +148,7 @@ export function ComplaintDraftProvider({ children }) {
       setLng,
       setAddress,
       setDescription,
+      setLanguage,
       setWardId,
       setNearestWard,
       setVoiceNote,

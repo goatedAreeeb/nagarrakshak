@@ -12,9 +12,18 @@ function blobToDataUrl(blob) {
   });
 }
 
+const LANGUAGE_OPTIONS = [
+  { value: 'en', label: 'English' },
+  { value: 'hi', label: 'हिन्दी (Hindi)' },
+  { value: 'te', label: 'తెలుగు (Telugu)' },
+  { value: 'hi-en', label: 'Hinglish (mixed Hindi-English)' },
+];
+
 export default function StepDescription({
   description,
   setDescription,
+  language,
+  setLanguage,
   voiceNoteBase64,
   voiceNoteMime,
   setVoiceNote,
@@ -181,6 +190,28 @@ export default function StepDescription({
           {error}
         </p>
       )}
+
+      <div className="mb-4">
+        <label htmlFor="language" className="mb-1.5 block text-sm text-text-secondary">
+          Language you're writing/speaking in
+        </label>
+        <select
+          id="language"
+          className="input-field"
+          value={language || 'en'}
+          onChange={(e) => setLanguage(e.target.value)}
+        >
+          {LANGUAGE_OPTIONS.map((opt) => (
+            <option key={opt.value} value={opt.value}>
+              {opt.label}
+            </option>
+          ))}
+        </select>
+        <p className="mt-1.5 text-xs text-text-muted">
+          Helps staff read your submission correctly. Full translation/voice support for more
+          languages is being expanded.
+        </p>
+      </div>
 
       <textarea
         id="description"

@@ -5,22 +5,11 @@ import {
   AlertTriangle,
   Sparkles,
   Send,
-  Award,
   FileText,
+  Clock,
 } from 'lucide-react';
-import {
-  analyzeComplaint,
-  classifyComplaintLocally,
-  buildClassificationContext,
-  SLA_BY_SEVERITY,
-} from '../../../lib/gemini';
-import { checkDuplicate } from '../../../lib/duplicateCheck';
 import { supabase } from '../../../lib/supabase';
-import { findOfficerForDept } from '../../../lib/officerRouting';
-import { createNotification } from '../../../contexts/NotificationContext';
 import { useAuth } from '../../../contexts/AuthContext';
-import DeptTag from '../../../components/shared/DeptTag';
-import SeverityBadge from '../../../components/shared/SeverityBadge';
 import LoadingSpinner from '../../../components/shared/LoadingSpinner';
 
 function base64ToBlob(base64) {
@@ -32,20 +21,29 @@ function base64ToBlob(base64) {
   return new Blob([arr], { type: mime });
 }
 
+const CATEGORY_LABELS = {
+  school_infrastructure: 'School infrastructure',
+  vocational_training: 'Vocational training',
+  road_repair: 'Road repair',
+  water_supply: 'Water supply',
+  drainage: 'Drainage',
+  health_facility: 'Health facility',
+  electricity: 'Electricity',
+};
+
+const POLL_INTERVAL_MS = 1500;
+const MAX_POLLS = 6;
+
 export default function StepAIResult({
   imageBase64,
   lat,
   lng,
   address,
   description,
-  wardId,
+  language,
   voiceNoteBase64,
   voiceNoteMime,
   safetySensitive,
-  aiResult,
-  setAiResult,
-  duplicateInfo,
-  setDuplicateInfo,
   submitted,
   setSubmitted,
   ticketId,
@@ -53,98 +51,66 @@ export default function StepAIResult({
   onReportAnother,
 }) {
   const { user } = useAuth();
-  const [analyzing, setAnalyzing] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [copied, setCopied] = useState(false);
+  const [features, setFeatures] = useState(null); // {category, entities, location_mentions, sentiment, confidence, status}
+  const [polling, setPolling] = useState(false);
 
   useEffect(() => {
-    if (submitted) return;
-
+    if (!submitted || !ticketId) return;
     let cancelled = false;
+    let attempts = 0;
 
-    const classContext = buildClassificationContext({
-      description,
-      hasVoice: Boolean(voiceNoteBase64),
-      hasImage: Boolean(imageBase64),
-      safetySensitive,
-    });
-    const local = classifyComplaintLocally(description, {
-      hasVoice: Boolean(voiceNoteBase64),
-      hasImage: Boolean(imageBase64),
-      safetySensitive,
-    });
-    setAiResult(local);
-    setAnalyzing(true);
-    setError('');
+    setPolling(true);
+    const poll = async () => {
+      const { data, error: pollError } = await supabase
+        .from('citizen_submissions')
+        .select('category, entities, location_mentions, sentiment, confidence, status')
+        .eq('id', ticketId)
+        .single();
 
-    checkDuplicate(lat, lng, local.dept).then((dup) => {
-      if (!cancelled) setDuplicateInfo(dup);
-    });
-
-    analyzeComplaint({
-      imageBase64,
-      description,
-      lat,
-      lng,
-      hasVoice: Boolean(voiceNoteBase64),
-      safetySensitive,
-    })
-      .then((result) => {
-        if (cancelled) return;
-        setAiResult(result);
-        return checkDuplicate(lat, lng, result.dept);
-      })
-      .then((dup) => {
-        if (!cancelled && dup) setDuplicateInfo(dup);
-      })
-      .catch(() => {
-        if (!cancelled) {
-          setError('AI enhancement unavailable. Local classification is ready to submit.');
+      if (cancelled) return;
+      if (!pollError && data) {
+        setFeatures(data);
+        if (data.status === 'processed' || data.status === 'needs_review' || attempts >= MAX_POLLS) {
+          setPolling(false);
+          return;
         }
-      })
-      .finally(() => {
-        if (!cancelled) setAnalyzing(false);
-      });
+      }
+      attempts += 1;
+      if (attempts < MAX_POLLS) {
+        setTimeout(poll, POLL_INTERVAL_MS);
+      } else {
+        setPolling(false);
+      }
+    };
 
+    poll();
     return () => {
       cancelled = true;
     };
-  }, [
-    submitted,
-    imageBase64,
-    description,
-    voiceNoteBase64,
-    lat,
-    lng,
-    setAiResult,
-    setDuplicateInfo,
-    safetySensitive,
-  ]);
+  }, [submitted, ticketId]);
 
   const handleSubmit = async () => {
-    if (!user || !aiResult) return;
+    if (!user) return;
     setSubmitting(true);
     setError('');
 
     try {
-      let imageUrl = null;
+      const mediaRefs = [];
+
       if (imageBase64) {
         const ext = imageBase64.includes('image/png') ? 'png' : 'jpg';
         const path = `${user.id}/${Date.now()}.${ext}`;
         const blob = base64ToBlob(imageBase64);
         const { error: uploadError } = await supabase.storage
           .from('complaint-images')
-          .upload(path, blob, {
-            contentType: blob.type,
-            upsert: false,
-          });
+          .upload(path, blob, { contentType: blob.type, upsert: false });
         if (uploadError) throw new Error(uploadError.message);
-        const { data: urlData } = supabase.storage.from('complaint-images').getPublicUrl(path);
-        imageUrl = urlData.publicUrl;
+        mediaRefs.push({ storage_path: path, media_type: 'photo', mime_type: blob.type });
       }
 
-      let voiceNoteUrl = null;
       if (voiceNoteBase64) {
         const mime = voiceNoteMime || 'audio/webm';
         const ext = mime.includes('mp4') ? 'm4a' : 'webm';
@@ -152,88 +118,33 @@ export default function StepAIResult({
         const voiceBlob = base64ToBlob(voiceNoteBase64);
         const { error: voiceUploadError } = await supabase.storage
           .from('complaint-images')
-          .upload(voicePath, voiceBlob, {
-            contentType: mime,
-            upsert: false,
-          });
+          .upload(voicePath, voiceBlob, { contentType: mime, upsert: false });
         if (voiceUploadError) throw new Error(voiceUploadError.message);
-        const { data: voiceUrlData } = supabase.storage
-          .from('complaint-images')
-          .getPublicUrl(voicePath);
-        voiceNoteUrl = voiceUrlData.publicUrl;
+        mediaRefs.push({ storage_path: voicePath, media_type: 'voice', mime_type: mime });
       }
 
-      const isDup = Boolean(duplicateInfo?.isDuplicate);
+      const { data: sessionData } = await supabase.auth.getSession();
+      const accessToken = sessionData?.session?.access_token;
+      if (!accessToken) throw new Error('Your session expired. Please sign in again.');
 
-      const submitSeverity = safetySensitive ? Math.max(4, aiResult.severity) : aiResult.severity;
-      const submitSlaHours = SLA_BY_SEVERITY[submitSeverity - 1];
+      const { data: fnData, error: fnError } = await supabase.functions.invoke('ingest-submission', {
+        body: {
+          text: description.trim(),
+          language,
+          channel: safetySensitive ? 'app' : imageBase64 ? 'photo' : voiceNoteBase64 ? 'voice' : 'app',
+          media_refs: mediaRefs,
+          lat,
+          lng,
+          address: address?.trim() || null,
+        },
+      });
 
-      const deptValue = (aiResult.dept || 'Other').trim() || 'Other';
-      const divisionValue = (aiResult.division || 'General').trim() || 'General';
+      if (fnError) throw new Error(fnError.message || 'Submission failed. Please try again.');
+      if (!fnData?.submission_id) throw new Error('Submission failed — no submission id returned.');
 
-      const payload = {
-        citizen_id: user.id,
-        image_url: imageUrl,
-        voice_note_url: voiceNoteUrl,
-        lat,
-        lng,
-        address: address.trim() || null,
-        description: description.trim(),
-        dept: deptValue,
-        division: divisionValue,
-        severity: submitSeverity,
-        sla_hours: submitSlaHours,
-        sla_deadline: null,
-        ward_id: wardId,
-        assigned_to: null,
-        status: 'open',
-        ai_reasoning: aiResult.ai_reasoning,
-        is_duplicate: isDup,
-        master_complaint_id: isDup ? duplicateInfo.masterId : null,
-        safety_sensitive: Boolean(safetySensitive),
-      };
-
-      let insertResult = await supabase.from('complaints').insert(payload).select('id').single();
-
-      // DBs without migration: safety_sensitive column causes 400 — retry without it
-      if (
-        insertResult.error &&
-        /safety_sensitive|schema cache|PGRST204/i.test(insertResult.error.message || '')
-      ) {
-        const { safety_sensitive: _drop, ...withoutFlag } = payload;
-        insertResult = await supabase
-          .from('complaints')
-          .insert(withoutFlag)
-          .select('id')
-          .single();
-      }
-
-      const { data: complaint, error: insertError } = insertResult;
-      if (insertError) throw new Error(insertError.message);
-
-      if (isDup && duplicateInfo.masterId) {
-        const prev = duplicateInfo.masterComplaint?.duplicate_count || 0;
-        await supabase
-          .from('complaints')
-          .update({ duplicate_count: prev + 1 })
-          .eq('id', duplicateInfo.masterId);
-      }
-
-      const officer = await findOfficerForDept(deptValue);
-      if (officer?.id) {
-        const prefix = safetySensitive ? 'Safety-sensitive report · ' : '';
-        await createNotification(
-          officer.id,
-          'complaint_assigned',
-          safetySensitive ? 'Safety-sensitive report to review' : 'New complaint to review',
-          `${prefix}${deptValue} issue reported near ${address || 'your ward'} — assign a worker and set SLA.`,
-          complaint.id
-        );
-      }
-
-      setSubmitted(true, complaint.id);
+      setSubmitted(true, fnData.submission_id);
     } catch (err) {
-      setError(err.message || 'Failed to submit submission. Please try again.');
+      setError(err.message || 'Failed to send submission. Please try again.');
     } finally {
       setSubmitting(false);
     }
@@ -246,20 +157,15 @@ export default function StepAIResult({
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const displaySeverity =
-    aiResult && safetySensitive ? Math.max(4, aiResult.severity) : aiResult?.severity;
-  const displaySlaHours =
-    aiResult && displaySeverity ? SLA_BY_SEVERITY[displaySeverity - 1] : aiResult?.sla_hours;
-
   if (submitted && ticketId) {
     return (
       <div className="max-w-lg mx-auto text-center animate-fade-in py-4">
         <div className="mx-auto w-20 h-20 rounded-full bg-accent-emerald/15 border border-accent-emerald/40 flex items-center justify-center mb-6 animate-success-check">
           <CheckCircle2 className="w-10 h-10 text-accent-emerald" strokeWidth={1.5} />
         </div>
-        <h2 className="text-2xl font-semibold text-text-primary mb-2">Submission submitted</h2>
+        <h2 className="text-2xl font-semibold text-text-primary mb-2">Submission recorded</h2>
         <p className="text-text-secondary mb-6">
-          Your report has been logged and routed to the relevant department.
+          Your submission has been logged for review.
           {safetySensitive && (
             <>
               {' '}
@@ -270,14 +176,14 @@ export default function StepAIResult({
         </p>
 
         <div className="card-elevated p-4 mb-4 text-left">
-          <p className="text-xs text-text-hint uppercase tracking-wide mb-1">Ticket ID</p>
+          <p className="text-xs text-text-hint uppercase tracking-wide mb-1">Submission ID</p>
           <div className="flex items-center gap-2">
             <code className="text-sm text-accent-cyan font-mono break-all flex-1">{ticketId}</code>
             <button
               type="button"
               onClick={copyTicketId}
               className="btn-ghost p-2 shrink-0"
-              aria-label="Copy ticket ID"
+              aria-label="Copy submission ID"
             >
               <Copy size={16} />
             </button>
@@ -285,17 +191,50 @@ export default function StepAIResult({
           {copied && <p className="text-xs text-accent-emerald mt-1">Copied!</p>}
         </div>
 
-        <p className="mb-6 mx-auto max-w-sm text-sm text-text-secondary">
-          <Award size={16} className="inline mr-1.5 -mt-0.5 text-accent-emerald" />
-          Earn <span className="font-semibold text-text-primary">+10 civic credits</span> when you
-          confirm the issue is resolved.
-        </p>
-
-        {duplicateInfo?.isDuplicate && (
-          <p className="text-sm text-accent-amber bg-accent-amber/10 border border-accent-amber/30 rounded-lg px-4 py-3 mb-6">
-            Linked to an existing nearby report. Your voice strengthens the case for faster action.
+        <div className="card-elevated p-4 mb-6 text-left">
+          <p className="text-xs text-text-hint uppercase tracking-wide mb-2 flex items-center gap-2">
+            <Sparkles className="w-3.5 h-3.5" />
+            AI processing
           </p>
-        )}
+          {polling && !features?.status && (
+            <div className="flex items-center gap-2 text-sm text-text-secondary" role="status">
+              <LoadingSpinner size="sm" />
+              Structuring your submission…
+            </div>
+          )}
+          {features && (
+            <div className="space-y-2 text-sm">
+              {features.status === 'needs_review' && (
+                <p className="flex items-center gap-2 text-accent-amber">
+                  <Clock size={14} />
+                  Low-confidence extraction — flagged for staff review, not auto-ranked.
+                </p>
+              )}
+              {features.category && (
+                <p>
+                  <span className="text-text-hint">Category:</span>{' '}
+                  {CATEGORY_LABELS[features.category] || features.category}
+                </p>
+              )}
+              {features.sentiment && (
+                <p>
+                  <span className="text-text-hint">Tone:</span> {features.sentiment}
+                </p>
+              )}
+              {typeof features.confidence === 'number' && (
+                <p>
+                  <span className="text-text-hint">Extraction confidence:</span>{' '}
+                  {Math.round(features.confidence * 100)}%
+                </p>
+              )}
+              {!features.category && !polling && (
+                <p className="text-text-muted">
+                  Could not confidently categorize yet — a staff reviewer will take a look.
+                </p>
+              )}
+            </div>
+          )}
+        </div>
 
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
           <button type="button" onClick={onViewDashboard} className="btn-primary">
@@ -303,7 +242,7 @@ export default function StepAIResult({
           </button>
           {onReportAnother && (
             <button type="button" onClick={onReportAnother} className="btn-ghost">
-              Report another issue
+              Send another submission
             </button>
           )}
         </div>
@@ -315,15 +254,15 @@ export default function StepAIResult({
     <div>
       <div className="mb-6">
         <h2 className="text-lg font-semibold text-text-primary flex items-center gap-2">
-          <Sparkles className="w-5 h-5 text-accent-cyan" />
-          AI classification
+          <FileText className="w-5 h-5 text-accent-cyan" />
+          Review before sending
         </h2>
         <p className="text-sm text-text-secondary mt-1">
-          Review how NagarRakshak categorized your submission before submitting.
+          Your submission will be structured and geo-linked automatically after sending — categorization
+          isn't shown before you send, since it's computed asynchronously by the intake pipeline.
           {safetySensitive && (
             <span className="block mt-2 text-rose-200/90 text-[13px]">
-              Priority filing: severity will be at least high (4/5) with a shorter SLA so staff see it
-              sooner.
+              Priority filing: this submission will be flagged for faster staff review.
             </span>
           )}
         </p>
@@ -335,105 +274,38 @@ export default function StepAIResult({
         </p>
       )}
 
-      {analyzing && aiResult && (
-        <div className="mb-4 flex items-center gap-2 text-xs text-text-muted" role="status">
-          <LoadingSpinner size="sm" />
-          <span>Enhancing classification with AI…</span>
-        </div>
-      )}
+      <div className="rounded-lg border border-border-default bg-bg-surface p-3 text-sm text-text-secondary space-y-1 mb-6">
+        <p>
+          <span className="text-text-hint">Location:</span> {address || `${lat?.toFixed(4)}, ${lng?.toFixed(4)}`}
+        </p>
+        <p className="line-clamp-2">
+          <span className="text-text-hint">Description:</span> {description}
+        </p>
+        <p>
+          <span className="text-text-hint">Language:</span> {language || 'en'}
+        </p>
+        {voiceNoteBase64 && <p className="text-accent-cyan">Includes voice note</p>}
+        {imageBase64 && <p className="text-accent-cyan">Includes photo</p>}
+      </div>
 
-      {!aiResult && analyzing ? (
-        <div className="flex flex-col items-center justify-center py-16 gap-4">
-          <LoadingSpinner size="lg" />
-          <p className="text-sm text-text-secondary">Preparing classification…</p>
-        </div>
-      ) : aiResult ? (
-        <div className="space-y-5">
-          <div className="grid sm:grid-cols-2 gap-4">
-            <div className="stat-card">
-              <p className="text-xs text-text-hint uppercase tracking-wide mb-2">Department</p>
-              <DeptTag dept={aiResult.dept} size="lg" />
-            </div>
-            <div className="stat-card">
-              <p className="text-xs text-text-hint uppercase tracking-wide mb-2">Severity</p>
-              <SeverityBadge severity={displaySeverity} />
-            </div>
-          </div>
-
-          <div className="stat-card space-y-2">
-            <div className="flex flex-wrap gap-2">
-              <span className="badge-violet">{aiResult.division}</span>
-              <span className="badge-cyan">{aiResult.urgency_label}</span>
-              <span className="badge-amber">SLA: {displaySlaHours}h</span>
-              {aiResult.location_risk && (
-                <span className="badge-red">High-risk zone</span>
-              )}
-            </div>
-            <p className="text-sm text-text-secondary leading-relaxed">
-              <FileText className="w-4 h-4 inline mr-1 text-text-hint" />
-              {aiResult.ai_reasoning}
-            </p>
-          </div>
-
-          {duplicateInfo?.isDuplicate && (
-            <div className="rounded-lg border border-accent-amber/40 bg-accent-amber/10 p-4 flex gap-3">
-              <AlertTriangle className="w-5 h-5 text-accent-amber shrink-0" />
-              <div>
-                <p className="font-medium text-accent-amber">Possible duplicate nearby</p>
-                <p className="text-sm text-text-secondary mt-1">
-                  A similar {aiResult.dept} submission exists within 150 m. Submitting will link your
-                  report to strengthen resolution priority.
-                </p>
-              </div>
-            </div>
-          )}
-
-          <div className="rounded-lg border border-border-default bg-bg-surface p-3 text-sm text-text-secondary space-y-1">
-            <p>
-              <span className="text-text-hint">Location:</span> {address || `${lat?.toFixed(4)}, ${lng?.toFixed(4)}`}
-            </p>
-            <p className="line-clamp-2">
-              <span className="text-text-hint">Description:</span> {description}
-            </p>
-            {voiceNoteBase64 && (
-              <p className="text-accent-cyan">Includes optional voice note</p>
-            )}
-          </div>
-
-          <button
-            type="button"
-            onClick={handleSubmit}
-            disabled={submitting}
-            className="btn-primary w-full flex items-center justify-center gap-2 disabled:opacity-60"
-          >
-            {submitting ? (
-              <>
-                <LoadingSpinner size="sm" />
-                Submitting…
-              </>
-            ) : (
-              <>
-                <Send size={18} />
-                Send submission
-              </>
-            )}
-          </button>
-        </div>
-      ) : (
-        <div className="text-center py-12">
-          <p className="text-text-secondary mb-4">Could not load AI results.</p>
-          <button
-            type="button"
-            onClick={() => {
-              setAiResult(null);
-              setDuplicateInfo(null);
-            }}
-            className="btn-ghost"
-          >
-            Retry analysis
-          </button>
-        </div>
-      )}
+      <button
+        type="button"
+        onClick={handleSubmit}
+        disabled={submitting}
+        className="btn-primary w-full flex items-center justify-center gap-2 disabled:opacity-60"
+      >
+        {submitting ? (
+          <>
+            <LoadingSpinner size="sm" />
+            Sending…
+          </>
+        ) : (
+          <>
+            <Send size={18} />
+            Send submission
+          </>
+        )}
+      </button>
     </div>
   );
 }
